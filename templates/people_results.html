@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body style="background:#121212; color:white; font-family:'Poppins', sans-serif; padding:20px;">
+
+<h1 style="font-size:32px; margin-bottom:12px;">Films for Provided People</h1>
+
+<div style="margin-bottom:18px; color:#ccc;">
+    <strong>Matched People:</strong>
+    <ul>
+    {% for input_name, nconst, matched in matched_people %}
+        <li>{{ input_name }} → {% if matched %}{{ matched }} ({{ nconst }}){% else %}<em>No match</em>{% endif %}</li>
+    {% endfor %}
+    </ul>
+</div>
+
+{% if films %}
+    <table style="width:100%; border-collapse:collapse;">
+    <tr style="text-align:left; color:#ddd; font-size:18px;"><th style="width:120px;">Poster</th><th>Title</th><th>Year</th><th>People</th></tr>
+    {% for f in films %}
+    <tr style="border-top:1px solid #222;">
+        <td style="padding:12px; vertical-align:top; width:120px;">
+            {% if f.poster_url %}
+                <img src="{{ f.poster_url }}" alt="poster" style="height:100px; width:auto; border-radius:6px;">
+            {% else %}
+                <div style="height:100px; width:70px; background:#333; border-radius:6px;"></div>
+            {% endif %}
+        </td>
+        <td style="padding:12px; vertical-align:top; color:#4DA3FF;"><a href="/movie/{{ f.tconst }}" style="color:#4DA3FF; text-decoration:none; font-size:18px;">{{ f.primaryTitle }}</a></td>
+        <td style="padding:12px; vertical-align:top; color:#ddd;">{{ f.startYear }}</td>
+        <td style="padding:12px; vertical-align:top; color:#ddd;">{{ f.persons }}</td>
+    </tr>
+    {% endfor %}
+    </table>
+{% else %}
+    <p style="color:#999;">No films found for the provided people.</p>
+{% endif %}
+
+<div style="margin-top:24px;">
+    <a href="/people" style="color:#4DA3FF; margin-right:20px;">Search again</a>
+    <a href="/" style="color:#4DA3FF;">Home</a>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body style="
+    margin:0;
+    padding:20px;
+    font-family:'Poppins', sans-serif;
+    background:#121212;
+    color:white;
+">
+
+{% if person %}
+
+    <div style="display:flex; gap:20px; align-items:flex-start;">
+        <div style="width:200px;">
+            {% if person.profile_url %}
+                <img src="{{ person.profile_url }}" alt="Profile" style="height:300px; width:auto; border-radius:6px;">
+            {% else %}
+                <div style="height:300px; width:180px; background:#333; border:1px solid #555; border-radius:6px;"></div>
+            {% endif %}
+        </div>
+
+        <div style="flex:1;">
+            <h1 style="font-size:36px; margin:0;">{{ person.primaryName }}</h1>
+            <div style="color:#999; font-size:16px; margin-top:8px;">
+                {% if person.birthYear %}
+                    Born: {{ person.birthYear }}
+                    {% if person.deathYear %} - Died: {{ person.deathYear }}{% endif %}
+                {% endif %}
+            </div>
+
+            <!-- Tabs for different roles -->
+            {% if categories %}
+            <div style="margin-top:20px;">
+                <div style="display:flex; gap:2px; border-bottom:2px solid #333;">
+                    {% for cat in categories %}
+                    <button onclick="showTab('{{ cat }}')" id="tab-{{ cat }}" 
+                            style="padding:10px 20px; background:#1a1a1a; color:#ddd; border:none; border-radius:6px 6px 0 0; cursor:pointer; font-size:16px;"
+                            {% if loop.first %}class="active-tab"{% endif %}>
+                        {{ cat.title() }} ({{ movies_by_category[cat]|length }})
+                    </button>
+                    {% endfor %}
+                </div>
+
+                {% for cat in categories %}
+                <div id="content-{{ cat }}" class="tab-content" {% if not loop.first %}style="display:none;"{% endif %}>
+                    <h2 style="margin-top:20px; color:#ccc;">{{ cat.title() }}</h2>
+                    {% if movies_by_category[cat] %}
+                    <table style="border-collapse: separate; border-spacing: 0 12px; width:100%;">
+                        {% for m in movies_by_category[cat] %}
+                        <tr>
+                            <td style="width:150px; vertical-align:top;">
+                                {% if m.poster_url %}
+                                    <img src="{{ m.poster_url }}" alt="Poster" style="height:120px; width:auto; border-radius:6px;">
+                                {% else %}
+                                    <div style="height:120px; width:90px; background:#333; border:1px solid #555; border-radius:6px;"></div>
+                                {% endif %}
+                            </td>
+                            <td style="vertical-align:middle; padding-left:12px; color:#ddd;">
+                                <a href="/movie/{{ m.tconst }}" style="color:#4DA3FF; font-size:18px; text-decoration:none;">{{ m.primaryTitle }}</a>
+                                {% if m.startYear %} ({{ m.startYear|int }}){% endif %}
+                                {% if m.averageRating %}
+                                    <div style="color:#aaa; font-size:13px; margin-top:4px;">★ {{ "%.1f"|format(m.averageRating) }}{% if m.numVotes %} ({{ "{:,}".format(m.numVotes|int) }} votes){% endif %}</div>
+                                {% endif %}
+                                {% if m.characters and m.characters != '' %}
+                                    <div style="color:#888; font-size:14px; margin-top:4px;">as {{ m.characters }}</div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                    {% else %}
+                        <p style="color:#999;">No {{ cat }} credits found.</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+                <h2 style="margin-top:20px; color:#ccc;">Movies</h2>
+                <p style="color:#999;">No movies found.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+    function showTab(category) {
+        // Hide all tab contents
+        const contents = document.querySelectorAll('.tab-content');
+        contents.forEach(c => c.style.display = 'none');
+        
+        // Remove active class from all tabs
+        const tabs = document.querySelectorAll('button[id^="tab-"]');
+        tabs.forEach(t => {
+            t.style.background = '#1a1a1a';
+            t.style.color = '#ddd';
+        });
+        
+        // Show selected tab content
+        document.getElementById('content-' + category).style.display = 'block';
+        
+        // Highlight active tab
+        const activeTab = document.getElementById('tab-' + category);
+        activeTab.style.background = '#43A047';
+        activeTab.style.color = 'white';
+    }
+    
+    // Activate first tab on load
+    window.addEventListener('DOMContentLoaded', () => {
+        const firstTab = document.querySelector('button[id^="tab-"]');
+        if (firstTab) {
+            const category = firstTab.id.replace('tab-', '');
+            showTab(category);
+        }
+    });
+    </script>
+
+{% else %}
+
+    <h1>No person found.</h1>
+
+{% endif %}
+
+<!-- Navigation -->
+<div style="margin-top:40px;">
+    <a href="/person" style="color:#4DA3FF; margin-right:20px;">Search again</a>
+    <a href="/" style="color:#4DA3FF;">Home</a>
+</div>
+
+</body>
+</html>

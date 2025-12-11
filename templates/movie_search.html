@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body style="
+    margin:0;
+    padding:0;
+    background:#121212;
+    color:white;
+    font-family:'Poppins', sans-serif;
+">
+
+<!-- Centered container -->
+<div style="
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+    text-align:center;
+">
+
+    <h1 style="font-size:40px; margin-bottom:30px;">Search for a Movie</h1>
+
+    <form action="/movie" method="GET" style="margin-bottom:25px;">
+        <input type="text" name="q" placeholder="Enter movie title" 
+            style="
+                padding:12px;
+                width:300px;
+                border-radius:6px;
+                border:1px solid #444;
+                background:#1e1e1e;
+                color:white;
+                font-size:16px;
+            ">
+        <button type="submit" style="
+            padding:12px 20px;
+            margin-left:10px;
+            background:#1E88E5;
+            color:white;
+            border:none;
+            border-radius:6px;
+            font-size:16px;
+            cursor:pointer;
+        ">Search</button>
+    </form>
+
+    <a href="/" style="color:#4DA3FF; font-size:18px;">Back</a>
+
+</div>
+
+</body>
+</html>
