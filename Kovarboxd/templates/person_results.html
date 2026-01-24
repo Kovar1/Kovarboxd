@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body style="
+    margin:0;
+    padding:20px;
+    font-family:'Poppins', sans-serif;
+    background:#121212;
+    color:white;
+">
+
+<body style="
+    margin:0;
+    padding:20px;
+    font-family:Arial, sans-serif;
+    background:#121212;
+    color:white;
+">
+
+<h1 style="font-size:36px; margin-bottom:20px;">Search Results</h1>
+
+{% if persons %}
+
+<!-- OUTER WRAPPER -->
+<div style="display:flex; flex-direction:column; gap:40px;">
+
+    {% set block_size = 9 %}
+
+    {% for block_start in range(0, persons|length, block_size) %}
+        {% set block = persons[block_start:block_start+block_size] %}
+
+        <!-- 3-COLUMN GRID -->
+        <div style="
+            display:flex;
+            justify-content:space-between;
+            width:100%;
+        ">
+
+            {% for col in range(0, 3) %}
+                <div style="width:32%;">
+
+                    {% for p in block[col*3 : col*3 + 3] %}
+                    {% if p %}
+                    <div style="display:flex; margin-bottom:25px;">
+
+                        <!-- Profile Image -->
+                        <div style="width:120px;">
+                            {% if p.profile_url %}
+                                <img src="{{ p.profile_url }}"
+                                     alt="{{ p.primaryName }} profile"
+                                     style="height:150px; width:auto; border-radius:6px; object-fit:cover;">
+                            {% else %}
+                                <div style="
+                                    height:150px;
+                                    width:100px;
+                                    background-color:#333;
+                                    border:1px solid #555;
+                                    border-radius:6px;
+                                    display:flex;
+                                    align-items:center;
+                                    justify-content:center;
+                                    color:#999;
+                                    font-size:12px;
+                                    text-align:center;
+                                    padding:5px;
+                                ">No Image</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Name -->
+                        <div style="padding-left:15px; display:flex; align-items:center;">
+                            <div>
+                                <a href="/person/{{ p.nconst }}"
+                                   style="color:#4DA3FF; font-size:20px; text-decoration:none;">
+                                   {{ p.primaryName }}
+                                </a>
+                            </div>
+                        </div>
+
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+
+                </div>
+            {% endfor %}
+
+        </div>
+
+    {% endfor %}
+
+</div>
+
+{% else %}
+<p>No persons found.</p>
+{% endif %}
+
+<!-- Navigation -->
+<div style="margin-top:40px;">
+    <a href="/person" style="color:#4DA3FF; margin-right:20px;">Search again</a>
+    <a href="/" style="color:#4DA3FF;">Home</a>
+</div>
+
+<!-- Pagination -->
+<div style="margin-top:30px; text-align:center; font-size:18px;">
+
+    {% if page > 1 %}
+        <a href="/person?q={{ query }}&page={{ page-1 }}"
+           style="color:#4DA3FF; margin-right:20px;">
+           ← Previous
+        </a>
+    {% endif %}
+
+    {% if has_next_page %}
+        <a href="/person?q={{ query }}&page={{ page+1 }}"
+           style="color:#4DA3FF;">
+           Next →
+        </a>
+    {% endif %}
+
+</div>
+
+</body>
+</html>
+
+<!-- Navigation -->
+<div style="margin-top:40px;">
+    <a href="/person" style="color:#4DA3FF; margin-right:20px;">Search again</a>
+    <a href="/" style="color:#4DA3FF;">Home</a>
+</div>
+
+</body>
+</html>

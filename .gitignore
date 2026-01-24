@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Build/output
+build/
+dist/
+*.egg-info/
+
+# IDE/editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS noise
+.DS_Store
+Thumbs.db
+
+# Environment/secrets
+.env
+*.env
+
+# Data dumps and generated assets
+.tmdb_cache/
+tmdb_dump_*.json
+tmdb_dump_*.sql
+backups/
+chunks/
+chunks_backup/
+db/tmdb_dump_*.json
+db/tmdb_dump_*.sql
+
+# Logs and caches
+*.log
+.pytest_cache/
+
+# Databases
+*.db
+*.sqlite
+
+# Flask instance folder
+instance/

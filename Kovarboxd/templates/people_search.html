@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body style="background:#121212; color:white; font-family:'Poppins', sans-serif;">
+<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; text-align:center;">
+    <h1 style="font-size:36px; margin-bottom:20px;">Search Films By People</h1>
+
+    <form action="/people" method="GET" style="display:flex; flex-direction:column; gap:12px; align-items:center;">
+        <div style="position:relative;">
+            <input id="name1" type="text" name="name1" placeholder="Person name #1" autocomplete="off"
+                   style="padding:10px; width:300px; background:#1e1e1e; color:white; border-radius:6px; border:1px solid #444;" />
+            <div id="dropdown1" style="position:absolute; top:44px; left:0; width:300px; background:#1e1e1e; border:1px solid #444; border-radius:6px; max-height:150px; overflow-y:auto; display:none; z-index:1000;"></div>
+        </div>
+        <div style="position:relative;">
+            <input id="name2" type="text" name="name2" placeholder="Person name #2 (optional)" autocomplete="off"
+                   style="padding:10px; width:300px; background:#1e1e1e; color:white; border-radius:6px; border:1px solid #444;" />
+            <div id="dropdown2" style="position:absolute; top:44px; left:0; width:300px; background:#1e1e1e; border:1px solid #444; border-radius:6px; max-height:150px; overflow-y:auto; display:none; z-index:1000;"></div>
+        </div>
+        <div style="position:relative;">
+            <input id="name3" type="text" name="name3" placeholder="Person name #3 (optional)" autocomplete="off"
+                   style="padding:10px; width:300px; background:#1e1e1e; color:white; border-radius:6px; border:1px solid #444;" />
+            <div id="dropdown3" style="position:absolute; top:44px; left:0; width:300px; background:#1e1e1e; border:1px solid #444; border-radius:6px; max-height:150px; overflow-y:auto; display:none; z-index:1000;"></div>
+        </div>
+        <button type="submit" style="padding:10px 20px; background:#43A047; color:white; border-radius:6px; border:none; font-size:16px;">Search Films</button>
+    </form>
+
+    <a href="/" style="color:#4DA3FF; margin-top:16px;">Home</a>
+
+    <script>
+        function attachAutocomplete(inputId, dropdownId) {
+            const input = document.getElementById(inputId);
+            const dropdown = document.getElementById(dropdownId);
+            let debounceTimer;
+
+            input.addEventListener('input', function() {
+                clearTimeout(debounceTimer);
+                const query = this.value.trim();
+                if (query.length < 2) { dropdown.style.display = 'none'; return; }
+                debounceTimer = setTimeout(() => {
+                    fetch(`/api/autocomplete/person?q=${encodeURIComponent(query)}`)
+                        .then(r => r.json())
+                        .then(suggestions => {
+                            if (!Array.isArray(suggestions) || suggestions.length === 0) { dropdown.style.display = 'none'; return; }
+                            dropdown.innerHTML = suggestions.map(s => `
+                                <div style="padding:10px; cursor:pointer; border-bottom:1px solid #333;"
+                                     onmouseover="this.style.background='#2a2a2a'"
+                                     onmouseout="this.style.background='#1e1e1e'"
+                                     onclick="(function(){ document.getElementById('${inputId}').value='${s.name.replace(/'/g, "&#39;")}'; document.getElementById('${dropdownId}').style.display='none'; })()">
+                                    ${s.name}
+                                </div>
+                            `).join('');
+                            dropdown.style.display = 'block';
+                        });
+                }, 300);
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!input.contains(e.target) && !dropdown.contains(e.target)) { dropdown.style.display = 'none'; }
+            });
+        }
+
+        attachAutocomplete('name1', 'dropdown1');
+        attachAutocomplete('name2', 'dropdown2');
+        attachAutocomplete('name3', 'dropdown3');
+    </script>
+</div>
+</body>
+</html>

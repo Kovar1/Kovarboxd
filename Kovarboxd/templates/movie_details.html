@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body style="
+    margin:0;
+    padding:20px;
+    font-family:'Poppins', sans-serif;
+    background:#121212;
+    color:white;
+">
+
+<h1 style="font-size:36px; margin-bottom:20px;">
+    {{ movie.primaryTitle }} ({{ movie.startYear }})
+</h1>
+
+<!-- CONTAINER: Poster + Cast/Crew Side-by-Side -->
+<div style="display:flex; gap:40px; margin-bottom:40px;">
+    
+    <!-- LEFT: Movie Poster + Overview -->
+    <div style="flex-shrink:0; width:200px;">
+        {% if movie.poster_url %}
+            <img src="{{ movie.poster_url }}" alt="Poster"
+                 style="width:200px; height:300px; border-radius:6px; object-fit:cover;">
+        {% else %}
+            <div style="
+                height:300px;
+                width:200px;
+                background-color:#333;
+                border:1px solid #555;
+                border-radius:6px;
+            "></div>
+        {% endif %}
+        
+        {% if movie.overview %}
+        <div style="
+            margin-top:15px;
+            color:#bbb;
+            font-size:13px;
+            line-height:1.5;
+        ">
+            {{ movie.overview }}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- RIGHT: Cast & Crew -->
+    <div style="display:flex; gap:40px; flex:1;">
+        
+        <!-- CAST COLUMN -->
+        <div style="flex:1;">
+            <h2 style="margin-top:0; margin-bottom:15px;">Cast</h2>
+            
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                {% for a in actors %}
+                <a href="/person/{{ a.nconst }}" style="text-decoration:none;">
+                    <div style="
+                        display:flex;
+                        align-items:center;
+                        gap:12px;
+                        padding:12px;
+                        background:#1a1a1a;
+                        border-radius:8px;
+                        cursor:pointer;
+                        transition:background 0.2s;
+                    " onmouseover="this.style.background='#2a2a2a'" onmouseout="this.style.background='#1a1a1a'">
+                        {% if a.profile_url %}
+                            <img src="{{ a.profile_url }}" alt="{{ a.actorName }}" style="width:38px; height:38px; border-radius:50%; object-fit:cover;">
+                        {% else %}
+                            <div style="width:38px; height:38px; border-radius:50%; background:#333; border:1px solid #555;"></div>
+                        {% endif %}
+                        <div style="flex:1;">
+                            <div style="color:#4DA3FF; font-weight:bold;">{{ a.actorName }}</div>
+                            <div style="color:#ddd; font-size:13px; margin-top:4px;">{{ a.characters }}</div>
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- CREW COLUMN -->
+        <div style="flex:1;">
+            <h2 style="margin-top:0; margin-bottom:15px;">Crew</h2>
+            
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                {% for c in crew %}
+                <a href="/person/{{ c.nconst }}" style="text-decoration:none;">
+                    <div style="
+                        display:flex;
+                        align-items:center;
+                        gap:12px;
+                        padding:12px;
+                        background:#1a1a1a;
+                        border-radius:8px;
+                        cursor:pointer;
+                        transition:background 0.2s;
+                    " onmouseover="this.style.background='#2a2a2a'" onmouseout="this.style.background='#1a1a1a'">
+                        {% if c.profile_url %}
+                            <img src="{{ c.profile_url }}" alt="{{ c.crewName }}" style="width:38px; height:38px; border-radius:50%; object-fit:cover;">
+                        {% else %}
+                            <div style="width:38px; height:38px; border-radius:50%; background:#333; border:1px solid #555;"></div>
+                        {% endif %}
+                        <div style="flex:1;">
+                            <div style="color:#4DA3FF; font-weight:bold;">{{ c.crewName }}</div>
+                            <div style="color:#ddd; font-size:13px; margin-top:4px;">{{ c.role }}</div>
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- NAV LINKS -->
+<div style="margin-top:40px;">
+    <a href="/movie" style="color:#4DA3FF; margin-right:20px;">Search again</a>
+    <a href="/" style="color:#4DA3FF;">Home</a>
+</div>
+
+</body>
+</html>

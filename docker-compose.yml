@@ -1,0 +1,17 @@
+services:
+  db:
+    image: postgres:16
+    container_name: kovarboxd_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: kovar
+      POSTGRES_PASSWORD: kovar_pw
+      POSTGRES_DB: kovarboxd
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db:/docker-entrypoint-initdb.d
+
+volumes:
+  pgdata:

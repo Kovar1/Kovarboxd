@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body style="
+    margin:0;
+    padding:20px;
+    font-family:'Poppins', sans-serif;
+    background:#121212;
+    color:white;
+">
+
+<h1 style="font-size:36px; margin-bottom:20px;">Search Results</h1>
+
+{% if movies %}
+
+<!-- OUTER WRAPPER -->
+<div style="display:flex; flex-direction:column; gap:40px;">
+
+    {% set block_size = 9 %}
+
+    {% for block_start in range(0, movies|length, block_size) %}
+        {% set block = movies[block_start:block_start+block_size] %}
+
+        <!-- 3-COLUMN GRID -->
+        <div style="
+            display:flex;
+            justify-content:space-between;
+            width:100%;
+        ">
+
+            {% for col in range(0, 3) %}
+                <div style="width:32%;">
+
+                    {% for m in block[col*3 : col*3 + 3] %}
+                    {% if m %}
+                    <div style="display:flex; margin-bottom:25px;">
+
+                        <!-- Poster -->
+                        <div style="width:120px;">
+                            {% if m.poster_url %}
+                                <img src="{{ m.poster_url }}"
+                                     alt="{{ m.primaryTitle }} poster"
+                                     style="height:150px; width:auto; border-radius:6px;">
+                            {% else %}
+                                <div style="
+                                    height:150px;
+                                    width:100px;
+                                    background-color:#333;
+                                    border:1px solid #555;
+                                    border-radius:6px;
+                                "></div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Title -->
+                        <div style="padding-left:15px; display:flex; align-items:center;">
+                            <a href="/movie/{{ m.tconst }}"
+                               style="color:#4DA3FF; font-size:20px; text-decoration:none;">
+                               {{ m.primaryTitle }} ({{ m.startYear }})
+                            </a>
+                        </div>
+
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+
+                </div>
+            {% endfor %}
+
+        </div>
+
+    {% endfor %}
+
+</div>
+
+{% else %}
+<p>No movies found.</p>
+{% endif %}
+
+<!-- Navigation -->
+<div style="margin-top:40px;">
+    <a href="/movie" style="color:#4DA3FF; margin-right:20px;">Search again</a>
+    <a href="/" style="color:#4DA3FF;">Home</a>
+</div>
+
+<!-- Pagination -->
+<div style="margin-top:30px; text-align:center; font-size:18px;">
+
+    {% if page > 1 %}
+        <a href="/movie?q={{ query }}&page={{ page-1 }}"
+           style="color:#4DA3FF; margin-right:20px;">
+           ← Previous
+        </a>
+    {% endif %}
+
+    {% if has_next_page %}
+        <a href="/movie?q={{ query }}&page={{ page+1 }}"
+           style="color:#4DA3FF;">
+           Next →
+        </a>
+    {% endif %}
+
+</div>
+
+</body>
+</html>

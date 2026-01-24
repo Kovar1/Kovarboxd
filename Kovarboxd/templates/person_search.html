@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body style="
+    margin:0;
+    padding:0;
+    background:#121212;
+    color:white;
+    font-family:'Poppins', sans-serif;
+">
+
+<!-- Centered container -->
+<div style="
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+    text-align:center;
+">
+
+    <h1 style="font-size:40px; margin-bottom:30px;">Search for a Person</h1>
+
+    <form action="/person" method="GET" style="margin-bottom:25px; position:relative;">
+        <input type="text" name="q" id="personSearchInput" placeholder="Enter name"
+            autocomplete="off"
+            style="
+                padding:12px;
+                width:300px;
+                border-radius:6px;
+                border:1px solid #444;
+                background:#1e1e1e;
+                color:white;
+                font-size:16px;
+            ">
+        <button type="submit" style="
+            padding:12px 20px;
+            margin-left:10px;
+            background:#43A047;
+            color:white;
+            border:none;
+            border-radius:6px;
+            font-size:16px;
+            cursor:pointer;
+        ">Search</button>
+        
+        <!-- Autocomplete dropdown -->
+        <div id="autocompleteDropdown" style="
+            position:absolute;
+            top:48px;
+            left:0;
+            width:300px;
+            background:#1e1e1e;
+            border:1px solid #444;
+            border-radius:6px;
+            max-height:150px;
+            overflow-y:auto;
+            display:none;
+            z-index:1000;
+        "></div>
+    </form>
+
+    <script>
+        const input = document.getElementById('personSearchInput');
+        const dropdown = document.getElementById('autocompleteDropdown');
+        let debounceTimer;
+
+        input.addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            const query = this.value.trim();
+            
+            if (query.length < 2) {
+                dropdown.style.display = 'none';
+                return;
+            }
+            
+            debounceTimer = setTimeout(() => {
+                fetch(`/api/autocomplete/person?q=${encodeURIComponent(query)}`)
+                    .then(r => r.json())
+                    .then(suggestions => {
+                        if (suggestions.length === 0) {
+                            dropdown.style.display = 'none';
+                            return;
+                        }
+                        
+                        dropdown.innerHTML = suggestions.map(s => 
+                            `<div style="padding:10px; cursor:pointer; border-bottom:1px solid #333;" 
+                                 onmouseover="this.style.background='#2a2a2a'" 
+                                 onmouseout="this.style.background='#1e1e1e'"
+                                 onclick="window.location.href='/person/${s.id}'">
+                                ${s.name}
+                            </div>`
+                        ).join('');
+                        
+                        dropdown.style.display = 'block';
+                    });
+            }, 300);
+        });
+
+        // Hide dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
+    </script>
+
+    <a href="/" style="color:#4DA3FF; font-size:18px;">Back</a>
+
+</div>
+
+</body>
+</html>
