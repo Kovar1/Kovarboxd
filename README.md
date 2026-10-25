@@ -1,4 +1,4 @@
-# YoavBoxd
+# Kovarboxd
 
 A local Python web application for exploring an offline IMDb dataset with a fast, modern UI. Search for movies, actors, and filmographies with poster images and metadata from TMDb.
 
@@ -8,13 +8,13 @@ A local Python web application for exploring an offline IMDb dataset with a fast
 
 ## Features
 
-- 🎬 **Movie Search** - Fast full-text search across millions of movies
-- 🎭 **Person Search** - Find actors, directors, and crew members
-- 👥 **Multi-Person Search** - Discover films featuring multiple people
-- 🖼️ **Visual Interface** - Movie posters and actor profile images via TMDb
-- ⚡ **FTS5 Search** - Lightning-fast search with ranking and accent-insensitive matching
-- 💾 **Smart Caching** - Minimal API calls with local database caching
-- 📱 **Responsive Design** - Clean HTML templates for desktop and mobile
+- **Movie Search** - Fast full-text search across millions of movies
+- **Person Search** - Find actors, directors, and crew members
+- **Multi-Person Search** - Discover films featuring multiple people
+- **Visual Interface** - Movie posters and actor profile images via TMDb
+- **FTS5 Search** - Lightning-fast search with ranking and accent-insensitive matching
+- **Smart Caching** - Minimal API calls with local database caching
+- **Responsive Design** - Clean HTML templates for desktop and mobile
 
 ## Quick Start
 
@@ -28,8 +28,8 @@ A local Python web application for exploring an offline IMDb dataset with a fast
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/yoavboxd.git
-   cd yoavboxd
+   git clone https://github.com/Kovar1/Kovarboxd.git
+   cd Kovarboxd
    ```
 
 2. **Create a virtual environment** (recommended)
@@ -78,13 +78,13 @@ A local Python web application for exploring an offline IMDb dataset with a fast
 
 ## Database Setup
 
-YoavBoxd requires a local SQLite database built from IMDb's public datasets.
+Kovarboxd requires a local SQLite database built from IMDb's public datasets.
 
 ### Option 1: Download Pre-Built Database (Recommended)
 
 If available, download `imdb.db` and place it in the `data/` folder:
 ```
-YoavBoxd/
+Kovarboxd/
 └── data/
     └── imdb.db
 ```
@@ -133,7 +133,7 @@ YoavBoxd/
 ## Project Structure
 
 ```
-YoavBoxd/
+Kovarboxd/
 ├── app.py                      # Flask web application (main entry point)
 ├── Main.py                     # CLI interface (legacy, optional)
 ├── db.py                       # Database connection singleton
@@ -260,6 +260,15 @@ python migrate_fts5_persons.py
 1. **New search function**: Add to `search_*.py` modules
 2. **New route**: Edit `app.py` and create template in `templates/`
 3. **Database changes**: Create migration script (follow `migrate_fts5_*.py` pattern)
+
+### Code Notes
+
+- `db.py` opens one shared SQLite connection (`check_same_thread=False`) for the whole app. Import `conn` from `db` instead of opening new connections.
+- All TMDb lookups go through `tmdb.py`, which caches poster and profile URLs in the database (`tmdb_posters`, `tmdb_actor_images`) so repeat API calls are avoided.
+- The search functions return pandas DataFrames. Keep these return shapes unless you also update the callers in `app.py`:
+  - `search_movies(query, page=1)` returns `(results_df, has_next_page)`
+  - `get_movie_details(tconst)` returns `(selected_df, actors_df, crew_df)`
+  - `search_person(query)` and `get_person_by_nconst(nconst)` return `(person_df, movies_df)`
 
 ### Running Tests
 
