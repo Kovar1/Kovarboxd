@@ -159,7 +159,8 @@ def to_rows(data):
         "status": _text_or_none(data.get("status")),
     }
 
-    genres = [{"id": g["id"], "name": g["name"]} for g in data.get("genres", [])]
+    # TMDb occasionally lists the same genre twice on one movie.
+    genres = list({g["id"]: {"id": g["id"], "name": g["name"]} for g in data.get("genres", [])}.values())
     movie_genres = [{"movie_id": movie_id, "genre_id": g["id"]} for g in genres]
 
     cast, crew = trim_credits(data.get("credits", {}))

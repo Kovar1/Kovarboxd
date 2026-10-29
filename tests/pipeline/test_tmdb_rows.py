@@ -93,6 +93,14 @@ def test_genre_rows(fight_club):
     }
 
 
+def test_duplicate_genres_are_dropped(fight_club):
+    # Seen in the wild on movie 78565, which lists Drama twice.
+    data = dict(fight_club, genres=[{"id": 18, "name": "Drama"}, {"id": 18, "name": "Drama"}])
+    rows = tmdb.to_rows(data)
+    assert rows["genres"] == [{"id": 18, "name": "Drama"}]
+    assert rows["movie_genres"] == [{"movie_id": 550, "genre_id": 18}]
+
+
 def test_people_are_unique_and_sorted(goodfellas):
     people = tmdb.to_rows(goodfellas)["people"]
     ids = [p["tmdb_id"] for p in people]

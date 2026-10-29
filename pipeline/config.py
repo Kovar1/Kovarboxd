@@ -18,7 +18,8 @@ MIGRATIONS_DIR = REPO_ROOT / "supabase" / "migrations"
 
 # Movies whose popularity in TMDb's daily export is at or above this value get
 # loaded. Picked by measuring the size of a 2,000 movie sample, see README.
-POPULARITY_CUTOFF = 10.0
+# On 2026-10-29, 3.6 meant about 22,000 movies.
+POPULARITY_CUTOFF = 3.6
 
 
 # Size budget ----------------------------------------------------------------
