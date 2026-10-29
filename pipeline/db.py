@@ -181,6 +181,11 @@ UPSERT_CREDIT = (
     _insert_sql("credits", CREDIT_COLUMNS)
     + " on conflict (credit_id) do update set "
     + _set_from_excluded(CREDIT_COLUMNS[1:])
+    + " where ("
+    + ", ".join(f"credits.{c}" for c in CREDIT_COLUMNS[1:])
+    + ") is distinct from ("
+    + ", ".join(f"excluded.{c}" for c in CREDIT_COLUMNS[1:])
+    + ")"
 )
 # "do nothing" instead of "do update" so workers never wait on each other for
 # the lock on a popular genre row like Drama.
@@ -190,27 +195,38 @@ INSERT_GENRE = "insert into kovarboxd.genres (id, name) values (%(id)s, %(name)s
 def write_movie(conn, rows):
     """Write one movie with its genres, people and credits in a single transaction.
 
-    rows is the dict from tmdb.to_rows(). Old genres and credits for the movie
-    are replaced, so a re-fetch drops credits TMDb no longer lists.
+    rows is the dict from tmdb.to_rows(). Genres and credits TMDb no longer
+    lists are deleted, and rows that didn't change are left alone. Most
+    nightly re-fetches change nothing in the credits, so this keeps dead rows,
+    and the table bloat they cause, to a minimum.
     """
     movie_id = rows["movie"]["tmdb_id"]
+    genre_ids = [g["genre_id"] for g in rows["movie_genres"]]
+    credit_ids = [c["credit_id"] for c in rows["credits"]]
     # Pipeline mode sends every statement in one round trip instead of one each.
     with conn.pipeline(), conn.transaction():
         cur = conn.cursor()
         cur.execute(UPSERT_MOVIE, rows["movie"])
         if rows["genres"]:
             cur.executemany(INSERT_GENRE, rows["genres"])
-        cur.execute("delete from kovarboxd.movie_genres where movie_id = %s", [movie_id])
+        cur.execute(
+            "delete from kovarboxd.movie_genres where movie_id = %s and not (genre_id = any(%s))",
+            [movie_id, genre_ids],
+        )
         if rows["movie_genres"]:
             cur.executemany(
-                "insert into kovarboxd.movie_genres (movie_id, genre_id) values (%(movie_id)s, %(genre_id)s)",
+                "insert into kovarboxd.movie_genres (movie_id, genre_id) values (%(movie_id)s, %(genre_id)s)"
+                " on conflict do nothing",
                 rows["movie_genres"],
             )
         # People are sorted by id, so two workers that share actors always
         # lock them in the same order and can't deadlock.
         if rows["people"]:
             cur.executemany(UPSERT_PERSON, rows["people"])
-        cur.execute("delete from kovarboxd.credits where movie_id = %s", [movie_id])
+        cur.execute(
+            "delete from kovarboxd.credits where movie_id = %s and not (credit_id = any(%s))",
+            [movie_id, credit_ids],
+        )
         if rows["credits"]:
             cur.executemany(UPSERT_CREDIT, rows["credits"])
 
