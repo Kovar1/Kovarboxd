@@ -121,7 +121,8 @@ and fill in "backfill_limit" with a number of movies. Leave it empty for a
 normal sync.
 
 GitHub only runs scheduled workflows from the default branch, so the nightly
-schedule starts once this is merged into `main`.
+schedule starts once this is merged into `main`. Until then it can be run by
+hand from the branch: `gh workflow run nightly-sync.yml --ref remodel/tmdb`.
 
 ## Database layout
 

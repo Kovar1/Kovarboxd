@@ -12,11 +12,6 @@ on:
         description: "Run a backfill batch of this many movies instead of the sync. Leave empty for a normal sync."
         required: false
         default: ""
-  # TEMPORARY: lets the workflow run once from the remodel/tmdb branch before
-  # it exists on main. Fires only when this file changes. Remove before merging.
-  push:
-    branches: [remodel/tmdb]
-    paths: [.github/workflows/nightly-sync.yml]
 
 # Never let two pipeline runs overlap. A new run waits for the current one.
 concurrency:
