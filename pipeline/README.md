@@ -162,12 +162,13 @@ Full crew lists can run to hundreds of people per movie, so `config.py` keeps:
 - Crew: only Director, Screenplay, Writer, Story, Novel, Producer, Director of
   Photography, Original Music Composer, Editor and Casting (`CREW_JOBS`).
 
-Across the full load TMDb listed 1,592,291 credits and we kept 541,459, 66%
+Across the full load TMDb listed 2,043,340 credits and we kept 786,569, 62%
 fewer. A stored credit costs about 194 bytes with its indexes, so the kept
-credits take 100 MB. Untrimmed they would take about 309 MB, more than the
+credits take 145 MB. Untrimmed they would take about 396 MB, more than the
 whole budget, before counting the extra people rows the dropped crew would
 have added. Popular movies have the longest crew lists: on the top 2,000
-alone, 82% of credits were trimmed.
+alone, 82% of credits were trimmed, against 44% for movies between
+popularity 3.0 and 3.2.
 
 ### Popularity cutoff
 
@@ -187,40 +188,77 @@ Picked by measuring rather than guessing:
    cutoff was 281 MB, still under the 285 MB stop line.
 
 The estimate turned out too high. Less popular movies share far more people
-with each other than a comparison against only the top 2,000 suggested: the
-full load averages 10.9 new people per movie, not 15 to 18. The real result
-is 7.6 KB per movie and 54% of the budget.
+with each other than a comparison against only the top 2,000 suggested. The
+3.6 load came to 163 MB, 54% of the budget.
+
+So the cutoff was lowered in measured steps instead of estimated again:
+
+4. Cutoff 3.2 added 7,659 movies with 19.1 credits and 7.3 new people each,
+   about 6.0 KB per movie (credits 194 bytes, people 186 bytes, movie row
+   800 bytes, each with indexes). Measure rows, not file growth, here:
+   new rows first fill the space `VACUUM` freed after a sync, so file growth
+   undercounts until that space is used up.
+5. At 6.0 KB per movie, cutoff 3.0 (5,346 more movies) was estimated at
+   236 MB. It came to 232.6 MB.
 
 ### Full load, 2026-10-29
 
 | | |
 | --- | --- |
-| Popularity cutoff | 3.6 |
-| Movies | 22,039 (22,038 with details, 1 gone from TMDb) |
-| People | 240,328 |
-| Credits | 541,459 |
-| Genres, movie_genres | 19, 47,916 |
-| kovarboxd schema | 163 MB of the 300 MB budget (54%) |
-| Whole database | 175 MB of the 500 MB plan limit (35%) |
-| Backfill time | 20.3 min for 20,039 movies (16.5 per second), plus 2 min for the 2,000 movie sample |
-| API calls | 22,040 across all backfill runs |
+| Popularity cutoff | 3.0 |
+| Movies | 35,045 (35,043 with details, 2 gone from TMDb) |
+| People | 332,583 |
+| Credits | 786,569 |
+| Genres, movie_genres | 19, 71,282 |
+| kovarboxd schema | 232.6 MB of the 300 MB budget (78%) |
+| Whole database | 244.9 MB of the 500 MB plan limit (49%) |
+| Backfill time | about 36 min of fetching in total: 20.3 min for the first 20,039 movies at 16.5 per second, then 7.9 and 5.6 min for the two lower cutoffs, plus 2 min for the sample |
+| API calls | 35,046 across all backfill runs, one per movie |
 
-Biggest pieces: credits 100 MB (54 MB of it indexes), people 43 MB, movies
-17 MB.
+Biggest pieces: credits 145.5 MB (78.7 MB of it indexes), people 56.5 MB,
+movies 25.8 MB, movie_genres 4.7 MB. That's 6.8 KB per movie on average.
+
+A nightly sync re-fetches the 1,300 to 2,600 stored movies TMDb lists as
+changed (6 to 12% of the catalog). Unchanged credits and genres are left
+alone, so that churn adds almost no size.
 
 ### Query timings
 
 `EXPLAIN ANALYZE` against the full load, first run and repeat:
 
-| Query | Plan | Cold | Warm |
+| Query | Plan | First run | Repeat |
 | --- | --- | --- | --- |
-| Title search "godfather" | GIN index on `search_tsv` | 3.3 ms | 0.06 ms |
-| People typo search "scorcese" | trigram GIN index on names | 43.8 ms | 11.7 ms |
-| `films_together` Scorsese, De Niro, Pesci | index only scan on `credits (person_id, movie_id)` | 3.3 ms | 0.3 ms |
+| Title search "godfather" | GIN index on `search_tsv` | 1.4 ms | 0.06 ms |
+| People typo search "scorcese" | trigram GIN index on names | 130 ms | 16 ms |
+| `films_together` Scorsese, De Niro, Pesci | index only scan on `credits (person_id, movie_id)` | 3.0 ms | 0.3 ms |
 
 `films_together` returns The Irishman, Casino, GoodFellas and Raging Bull.
 
-For people search, ordering matches by plain `similarity()` puts Francesca
-and Cathy Scorsese above Martin, because shorter names score higher. Ordering
-by `word_similarity(query, name)` and then popularity puts Martin first at the
-same speed.
+The 130 ms typo search was the first query to touch the people table after
+the load, so it read about 1,300 pages from disk. The index is used and
+nothing is missing: once the pages are in memory the same search takes 16 to
+28 ms, and other typo searches take 21 to 83 ms on their first run and 3 to
+22 ms repeated.
+
+### People search for Phase 2
+
+Plain `name % query` with ordering by `similarity()` works but picks the
+wrong person too often. Short names score higher, so "scorcese" ranks
+Francesca Scorsese above Martin. "kubrik" misses Stanley Kubrick entirely
+(similarity 0.28, under the 0.3 default).
+
+This version found the intended person first for scorcese, tarantinno,
+kubrik, spielburg, scarlet johanson and de niro, in 1 to 47 ms, using the
+same trigram index:
+
+```sql
+set pg_trgm.word_similarity_threshold = 0.5;
+
+select tmdb_id, name
+from kovarboxd.people
+where :q <% lower(kovarboxd.f_unaccent(name))
+order by word_similarity(:q, lower(kovarboxd.f_unaccent(name))) * ln(2 + popularity) desc
+limit 10;
+```
+
+Pass the query through `lower(kovarboxd.f_unaccent(...))` too.
