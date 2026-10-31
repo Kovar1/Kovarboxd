@@ -36,7 +36,7 @@ Node 24.
 
 | Variable | Used for |
 | --- | --- |
-| `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Reading the catalog |
+| `SUPABASE_URL`, `SUPABASE_ANON_KEY` | Reading the catalog |
 | `SUPABASE_SERVICE_ROLE_KEY` | Server only. Saving person details fetched on demand, nothing else |
 | `TMDB_API_TOKEN` | Server only. Fetching person details on demand |
 
