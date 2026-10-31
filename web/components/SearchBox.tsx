@@ -2,8 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
-
-type Suggestion = { kind: "movie" | "person"; id: number; label: string; detail: string | null; href: string };
+import { useSuggestions } from "./useSuggestions";
 
 /**
  * Search field with a typeahead dropdown. Typing asks /api/search for the top
@@ -14,32 +13,10 @@ export function SearchBox({ initialQuery = "", autoFocus = false }: { initialQue
   const router = useRouter();
   const listId = useId();
   const [query, setQuery] = useState(initialQuery);
-  const [items, setItems] = useState<Suggestion[]>([]);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
   const boxRef = useRef<HTMLFormElement>(null);
-
-  // Debounced fetch. A stale response is ignored if the query moved on.
-  useEffect(() => {
-    const q = query.trim();
-    if (q.length < 2) return;
-    const controller = new AbortController();
-    const timer = setTimeout(async () => {
-      try {
-        const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`, { signal: controller.signal });
-        if (!res.ok) return;
-        const data = (await res.json()) as { suggestions: Suggestion[] };
-        setItems(data.suggestions);
-        setActive(-1);
-      } catch {
-        // Aborted or offline: keep the previous suggestions.
-      }
-    }, 180);
-    return () => {
-      clearTimeout(timer);
-      controller.abort();
-    };
-  }, [query]);
+  const shown = useSuggestions(query);
 
   // Close the dropdown on a click outside.
   useEffect(() => {
@@ -49,9 +26,6 @@ export function SearchBox({ initialQuery = "", autoFocus = false }: { initialQue
     document.addEventListener("mousedown", onClick);
     return () => document.removeEventListener("mousedown", onClick);
   }, []);
-
-  // Suggestions for a query that's since been cleared shouldn't show.
-  const shown = query.trim().length >= 2 ? items : [];
 
   const go = (href: string) => {
     setOpen(false);
@@ -103,6 +77,7 @@ export function SearchBox({ initialQuery = "", autoFocus = false }: { initialQue
         onChange={(e) => {
           setQuery(e.target.value);
           setOpen(true);
+          setActive(-1);
         }}
         onFocus={() => setOpen(true)}
         onKeyDown={onKeyDown}

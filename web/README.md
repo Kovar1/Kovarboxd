@@ -1,6 +1,7 @@
 # Kovarboxd (web)
 
-Search movies and the people who make them. Next.js (App Router) on Vercel,
+Pick two or more people and see every film they made together. Also search
+movies and people and browse their pages. Next.js (App Router) on Vercel,
 reading the `kovarboxd` catalog in Supabase that the Python pipeline in
 `../pipeline` loads from TMDb every night.
 
@@ -10,7 +11,8 @@ This product uses the TMDB API but is not endorsed or certified by TMDB.
 
 | Route | What |
 | --- | --- |
-| `/` | Search box and the most popular movies right now |
+| `/` | The films-together picker with example searches, then the most popular movies |
+| `/together?ids=1032,380,4517` | Films together: every movie all the chosen people have a credit on, newest first, with each person's roles. Up to 6 people. The URL can be shared |
 | `/search?q=` | Movie and people results. The header search box shows suggestions as you type, from `/api/search` |
 | `/movie/769-goodfellas` | Poster, backdrop, facts, overview, key crew by job, top billed cast, IMDb and TMDB links |
 | `/person/1032-martin-scorsese` | Photo, life facts, biography, known for, filmography as cast and crew, newest first |
@@ -69,6 +71,20 @@ Node 24.
 - Images load straight from TMDB's image CDN in its standard sizes, through a
   custom `next/image` loader (`lib/tmdb-image-loader.ts`), so Vercel's image
   optimization quota isn't used.
+
+## Films together
+
+The people picker suggests names as you type, with a photo and department so
+people who share a name can be told apart. Each pick or removal changes the
+URL, and the page asks `kovarboxd.films_together(person_ids)` for the movies
+everyone has a credit on (cast or crew), then one more query for what each
+person did on each one. Results are cached for hours per set of people.
+
+It only sees the credits the pipeline keeps: the top 25 billed cast and the
+key crew jobs listed in `pipeline/config.py`. Someone billed 40th, or a crew
+member in a job outside that list, won't connect films.
+
+Every person page links here with that person already picked.
 
 ## Person details on demand
 

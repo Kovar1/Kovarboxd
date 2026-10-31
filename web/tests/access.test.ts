@@ -34,6 +34,15 @@ describe.skipIf(!url || !anonKey)("anon access to kovarboxd", () => {
     expect(data?.[0]?.name).toBe("Stanley Kubrick");
   });
 
+  it("can find films people made together", async () => {
+    const { data, error } = await db()
+      .rpc("films_together", { person_ids: [1032, 380, 4517] })
+      .select("title");
+    expect(error).toBeNull();
+    const titles = (data as unknown as { title: string }[]).map((m) => m.title);
+    expect(titles).toEqual(expect.arrayContaining(["GoodFellas", "Casino", "Raging Bull", "The Irishman"]));
+  });
+
   it("can't read pipeline runs or migrations", async () => {
     for (const table of ["pipeline_runs", "schema_migrations"]) {
       const { data, error } = await db().from(table).select("*").limit(1);

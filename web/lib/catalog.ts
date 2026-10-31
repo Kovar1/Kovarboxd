@@ -2,7 +2,8 @@ import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 import { detailsAreStale } from "./person-details";
 import { catalogDb } from "./supabase";
-import type { FilmCredit, MovieDetail, MovieSummary, PersonDetail, PersonSummary } from "./types";
+import { rolesByMovie, type RoleRow } from "./together";
+import type { FilmCredit, MovieDetail, MovieSummary, PersonDetail, PersonSummary, TogetherFilm } from "./types";
 
 // Every read here is cached for hours: the catalog only changes when the
 // nightly sync runs. A miss costs one Data API round trip.
@@ -81,6 +82,51 @@ export async function getPerson(id: number): Promise<PersonDetail | null> {
     details_stale: detailsAreStale(details_fetched_at),
     as_of: new Date().toISOString().slice(0, 10),
   };
+}
+
+const PERSON_SUMMARY = "tmdb_id, name, profile_path, known_for_department, popularity";
+
+/** The people with these ids, in the same order. Unknown ids are left out. */
+export async function getPeople(ids: number[]): Promise<PersonSummary[]> {
+  "use cache";
+  cacheLife("hours");
+  if (!ids.length) return [];
+  const { data, error } = await catalogDb().from("people").select(PERSON_SUMMARY).in("tmdb_id", ids);
+  if (error) throw new Error(`people ${ids}: ${error.message}`);
+  const byId = new Map((data as PersonSummary[]).map((p) => [p.tmdb_id, p]));
+  return ids.flatMap((id) => byId.get(id) ?? []);
+}
+
+/**
+ * Every movie all of these people have a credit on, newest first, with each
+ * person's roles. Uses kovarboxd.films_together, then one query for roles.
+ */
+export async function getFilmsTogether(ids: number[]): Promise<TogetherFilm[]> {
+  "use cache";
+  cacheLife("hours");
+  const db = catalogDb();
+  const { data, error } = await db
+    .rpc("films_together", { person_ids: ids })
+    .select("tmdb_id, title, release_date, release_year, poster_path, popularity");
+  if (error) throw new Error(`films together ${ids}: ${error.message}`);
+  const movies = data as unknown as (MovieSummary & { release_date: string | null })[];
+  if (!movies.length) return [];
+
+  const { data: credits, error: creditsError } = await db
+    .from("credits")
+    .select("person_id, movie_id, kind, character, job")
+    .in("person_id", ids)
+    .in(
+      "movie_id",
+      movies.map((m) => m.tmdb_id),
+    );
+  if (creditsError) throw new Error(`films together roles ${ids}: ${creditsError.message}`);
+  const roles = rolesByMovie(credits as RoleRow[]);
+
+  return movies.map((m) => ({
+    ...m,
+    roles: ids.map((person_id) => ({ person_id, roles: roles.get(m.tmdb_id)?.get(person_id) ?? [] })),
+  }));
 }
 
 export async function searchMovies(q: string, limit = 20): Promise<MovieSummary[]> {

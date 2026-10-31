@@ -7,6 +7,7 @@ import { TmdbImage } from "@/components/TmdbImage";
 import { getPerson, getPopularMovies, getMovie } from "@/lib/catalog";
 import { filmography, knownFor, type FilmographyRow } from "@/lib/credits";
 import { moviePath, parseIdParam, personPath } from "@/lib/slug";
+import { togetherPath } from "@/lib/together";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -97,6 +98,9 @@ export default async function PersonPage({ params }: Props) {
             asOf={person.as_of}
           />
           <p className="ext-links">
+            <Link href={togetherPath([person.tmdb_id])} className="button-link">
+              Find films with someone else
+            </Link>
             <a href={`https://www.themoviedb.org/person/${person.tmdb_id}`} target="_blank" rel="noreferrer">
               TMDB
             </a>

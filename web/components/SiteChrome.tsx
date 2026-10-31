@@ -7,6 +7,9 @@ export function Header() {
       <Link className="brand" href="/">
         Kovarboxd
       </Link>
+      <Link className="nav-link" href="/together">
+        Films together
+      </Link>
       <SearchBox />
     </header>
   );

@@ -61,6 +61,12 @@ export type FilmCredit = Credit & {
   movie: MovieSummary & { release_date: string | null };
 };
 
+/** A movie in a films-together result, with what each chosen person did on it. */
+export type TogetherFilm = MovieSummary & {
+  release_date: string | null;
+  roles: { person_id: number; roles: string[] }[];
+};
+
 /** Fetched from TMDb on demand, see lib/person-details.ts. */
 export type PersonDetails = {
   biography: string | null;
