@@ -75,7 +75,9 @@ have `details_fetched_at` null. A movie the API answers 404 for gets
 
 ### Nightly sync
 
-1. Reads today's export. New IDs at or above the cutoff are inserted.
+1. Reads today's export. New IDs at or above `SYNC_ENTRY_CUTOFF` (8) are
+   inserted. That's much higher than the backfill cutoff on purpose, see
+   "Nightly entry cutoff" below.
 2. Asks `GET /3/movie/changes` for everything changed since the last
    successful sync (the past 24 hours on the first run, at most 14 days) and
    queues the changed movies we store for a re-fetch.
@@ -84,8 +86,8 @@ have `details_fetched_at` null. A movie the API answers 404 for gets
    on any that came back. Movies are never deleted.
 5. Fetches everything queued, up to 30,000 movies per run.
 
-Movies that drop below the cutoff later are kept, so the table only grows
-when new movies cross it.
+Movies that drop below a cutoff later are kept, so the table only grows
+when new movies cross the entry cutoff.
 
 Two guards stop a bad export from doing damage: a file with fewer than
 500,000 lines is refused, and a run that would mark more than 2% of stored
@@ -200,6 +202,21 @@ So the cutoff was lowered in measured steps instead of estimated again:
    undercounts until that space is used up.
 5. At 6.0 KB per movie, cutoff 3.0 (5,346 more movies) was estimated at
    236 MB. It came to 232.6 MB.
+
+### Nightly entry cutoff
+
+The first catch-up sync (2026-10-31, two days after the load) used the same
+3.0 cutoff for new movies and added 11,157 of them, filling the schema to the
+95% stop line. Popularity wasn't rescaled: the median movie barely moved. But
+near 3.0 individual movies swing 20% or more from day to day, so thousands
+drift above the cutoff every day, and since movies are never dropped they
+pile up. Between the two exports a quarter of the top 35,000 changed.
+
+So the sync has its own, much higher entry cutoff, 8. Over those two days
+only 8 movies not already stored reached it, against 84 at 6 and 364 at 5.
+That's about 4 a day, mostly new releases, roughly 10 MB a year. The 11,149
+movies the catch-up sync added below 8 were deleted, along with their credits
+and the people credited only in them.
 
 ### Full load, 2026-10-29
 
