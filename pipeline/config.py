@@ -21,6 +21,13 @@ MIGRATIONS_DIR = REPO_ROOT / "supabase" / "migrations"
 # 3.0 meant about 35,000 movies and about 80% of the budget.
 POPULARITY_CUTOFF = 3.0
 
+# The nightly sync only adds movies at or above this much higher value.
+# Popularity near 3.0 swings 20% or more from day to day, so thousands of
+# movies cross 3.0 every day, and since movies are never dropped the catalog
+# would keep growing (one catch-up sync added 11,157 in two days). At 8, about
+# 4 movies a day get in: new releases and real revivals, about 10 MB a year.
+SYNC_ENTRY_CUTOFF = 8.0
+
 
 # Size budget ----------------------------------------------------------------
 
