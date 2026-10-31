@@ -1,6 +1,6 @@
 """Nightly update.
 
-1. Read today's export. New IDs above the cutoff get inserted.
+1. Read today's export. New IDs at or above SYNC_ENTRY_CUTOFF get inserted.
 2. Ask /movie/changes which movies changed since the last good sync and queue
    the ones we store for a re-fetch.
 3. Refresh popularity for every stored movie from the export (no API calls).
@@ -91,8 +91,8 @@ def body(conn, client, stats, cutoff):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Nightly sync with TMDb.")
-    parser.add_argument("--cutoff", type=float, default=config.POPULARITY_CUTOFF,
-                        help=f"popularity cutoff for new movies (default {config.POPULARITY_CUTOFF})")
+    parser.add_argument("--cutoff", type=float, default=config.SYNC_ENTRY_CUTOFF,
+                        help=f"popularity cutoff for new movies (default {config.SYNC_ENTRY_CUTOFF})")
     args = parser.parse_args(argv)
     return run("sync", lambda conn, client, stats: body(conn, client, stats, args.cutoff))
 
