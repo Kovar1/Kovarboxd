@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { joinNames, MAX_PEOPLE, parsePersonIds, rolesByMovie, togetherPath, type RoleRow } from "@/lib/together";
+import {
+  joinNames,
+  MAX_PEOPLE,
+  parsePersonIds,
+  rolesByMovie,
+  splitPeopleQuery,
+  togetherPath,
+  type RoleRow,
+} from "@/lib/together";
 
 describe("parsePersonIds", () => {
   it("reads a comma separated list", () => {
@@ -18,6 +26,21 @@ describe("parsePersonIds", () => {
 
   it(`stops at ${MAX_PEOPLE} people`, () => {
     expect(parsePersonIds("1,2,3,4,5,6,7,8")).toHaveLength(MAX_PEOPLE);
+  });
+});
+
+describe("splitPeopleQuery", () => {
+  it("splits names on commas, plus and ampersand", () => {
+    expect(splitPeopleQuery("adam driver, scarlet johanson")).toEqual(["adam driver", "scarlet johanson"]);
+    expect(splitPeopleQuery("scorsese + de niro & pesci")).toEqual(["scorsese", "de niro", "pesci"]);
+  });
+
+  it("leaves ordinary searches alone", () => {
+    expect(splitPeopleQuery("the godfather")).toEqual([]);
+  });
+
+  it("ignores parts too short to search", () => {
+    expect(splitPeopleQuery("nolan, ,  x")).toEqual(["nolan"]);
   });
 });
 

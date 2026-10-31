@@ -111,6 +111,15 @@ a:hover { color: var(--accent); }
 .together-roles { margin: 6px 0 0; padding: 0; list-style: none; color: var(--muted); font-size: 14px; }
 .together-roles li { margin: 2px 0; }
 .role-person { color: var(--text); font-weight: 600; }
+.together-offer {
+  display: flex; flex-direction: column; gap: 2px;
+  max-width: 560px; margin: 18px 0 8px; padding: 14px 18px;
+  background: var(--surface); border: 1px solid var(--accent); border-radius: 14px;
+}
+.together-offer:hover { background: var(--surface-2); color: inherit; }
+.together-offer-label { font-size: 12px; text-transform: uppercase; letter-spacing: 1.4px; color: var(--accent); font-weight: 700; }
+.together-offer-names { font-size: 18px; font-weight: 700; }
+.together-offer-go { font-size: 14px; color: var(--muted); }
 .button-link {
   font-size: 13px; font-weight: 700; padding: 4px 12px; border-radius: 999px;
   color: var(--bg); background: var(--accent);

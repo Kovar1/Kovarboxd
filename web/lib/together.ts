@@ -16,6 +16,20 @@ export function parsePersonIds(raw: string | string[] | undefined): number[] {
   return ids.slice(0, MAX_PEOPLE);
 }
 
+/**
+ * A search like "adam driver, scarlet johanson" (or with + or &) split into
+ * names, so the search page can offer films together. Parts under 3
+ * characters are ignored, as people search ignores them.
+ */
+export function splitPeopleQuery(q: string): string[] {
+  if (!/[,+&]/.test(q)) return [];
+  return q
+    .split(/[,+&]/)
+    .map((part) => part.trim())
+    .filter((part) => part.length >= 3)
+    .slice(0, MAX_PEOPLE);
+}
+
 export function togetherPath(ids: number[]): string {
   return ids.length ? `/together?ids=${ids.join(",")}` : "/together";
 }
