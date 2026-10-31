@@ -29,3 +29,6 @@ data/imdb.db
 # Flask
 instance/
 .pytest_cache/
+
+# Pipeline download cache
+.cache/

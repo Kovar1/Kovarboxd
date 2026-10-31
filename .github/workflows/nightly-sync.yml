@@ -1,0 +1,52 @@
+name: Nightly TMDb sync
+
+on:
+  # 09:17 UTC, after TMDb publishes the daily export (around 08:00 UTC).
+  # GitHub only runs schedules from the default branch, so this starts once
+  # the pipeline is merged into main.
+  schedule:
+    - cron: "17 9 * * *"
+  workflow_dispatch:
+    inputs:
+      backfill_limit:
+        description: "Run a backfill batch of this many movies instead of the sync. Leave empty for a normal sync."
+        required: false
+        default: ""
+
+# Never let two pipeline runs overlap. A new run waits for the current one.
+concurrency:
+  group: kovarboxd-pipeline
+  cancel-in-progress: false
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      TMDB_API_TOKEN: ${{ secrets.TMDB_API_TOKEN }}
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pipeline/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r pipeline/requirements.txt
+
+      - name: Sync
+        if: ${{ !inputs.backfill_limit }}
+        run: python -m pipeline.sync
+
+      - name: Backfill batch
+        if: ${{ inputs.backfill_limit }}
+        env:
+          BACKFILL_LIMIT: ${{ inputs.backfill_limit }}
+        run: python -m pipeline.backfill --limit "$BACKFILL_LIMIT"
+
+      - name: Data quality and size report
+        if: ${{ always() }}
+        run: python -m pipeline.check
