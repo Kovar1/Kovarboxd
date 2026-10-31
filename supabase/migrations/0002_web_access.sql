@@ -6,6 +6,11 @@
 -- the Supabase dashboard (Data API settings). Only the catalog tables are
 -- readable: pipeline_runs and schema_migrations get no grants and stay closed.
 
+-- Load pg_trgm in this session. Until it's loaded its settings are unknown
+-- placeholders, and only a superuser may pin those on a function, so the
+-- "set pg_trgm.word_similarity_threshold" lines below would be refused.
+select extensions.similarity('', '');
+
 grant usage on schema kovarboxd to anon, authenticated, service_role;
 
 grant select on
@@ -16,12 +21,16 @@ grant select on
   kovarboxd.credits
 to anon, authenticated;
 
--- Movies without details or gone from TMDb are hidden here, so the app can't
--- show them by accident. Credits and genres of hidden movies stay readable but
--- lead nowhere: the app embeds movies with an inner join.
+-- Movies that were never loaded or are gone from TMDb are hidden here, so the
+-- app can't show them by accident. "Never loaded" is title is null: only the
+-- placeholder rows the pipeline inserts from the export lack a title.
+-- details_fetched_at isn't used because the sync also clears it to queue a
+-- re-fetch of a changed movie, which must stay visible meanwhile.
+-- Credits and genres of hidden movies stay readable but lead nowhere: the app
+-- embeds movies with an inner join.
 create policy "readable catalog movies" on kovarboxd.movies
   for select to anon, authenticated
-  using (removed_at is null and details_fetched_at is not null);
+  using (removed_at is null and title is not null);
 
 create policy "readable genres" on kovarboxd.genres
   for select to anon, authenticated using (true);
@@ -74,7 +83,7 @@ as $$
   cross join terms t
   where length(t.nq) >= 2
     and m.removed_at is null
-    and m.details_fetched_at is not null
+    and m.title is not null
     and (m.search_tsv @@ t.tsq or t.nq <% lower(kovarboxd.f_unaccent(m.title)))
   order by
     (case

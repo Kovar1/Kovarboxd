@@ -61,13 +61,20 @@ export type FilmCredit = Credit & {
   movie: MovieSummary & { release_date: string | null };
 };
 
-export type PersonDetail = PersonSummary & {
-  gender: number | null;
+/** Fetched from TMDb on demand, see lib/person-details.ts. */
+export type PersonDetails = {
   biography: string | null;
   birthday: string | null;
   deathday: string | null;
   place_of_birth: string | null;
-  credits: FilmCredit[];
-  /** "YYYY-MM-DD" the cached page was built, for computing ages. */
-  as_of: string;
 };
+
+export type PersonDetail = PersonSummary &
+  PersonDetails & {
+    gender: number | null;
+    credits: FilmCredit[];
+    /** True when the details are missing or due for a refresh. */
+    details_stale: boolean;
+    /** "YYYY-MM-DD" the cached page was built, for computing ages. */
+    as_of: string;
+  };

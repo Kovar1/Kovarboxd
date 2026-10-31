@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { MovieGrid } from "@/components/MovieGrid";
+import { PersonFacts } from "@/components/PersonFacts";
 import { TmdbImage } from "@/components/TmdbImage";
 import { getPerson, getPopularMovies, getMovie } from "@/lib/catalog";
 import { filmography, knownFor, type FilmographyRow } from "@/lib/credits";
-import { ageBetween, formatDate } from "@/lib/format";
 import { moviePath, parseIdParam, personPath } from "@/lib/slug";
 
 type Props = { params: Promise<{ id: string }> };
@@ -35,21 +35,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { person } = await load(params);
   if (!person) return { title: "Person not found" };
   return { title: person.name, description: person.biography?.slice(0, 200) ?? undefined };
-}
-
-function lifeFacts(p: { birthday: string | null; deathday: string | null; place_of_birth: string | null }, today: string) {
-  const facts: string[] = [];
-  if (p.birthday) {
-    const born = `Born ${formatDate(p.birthday)}${p.place_of_birth ? ` in ${p.place_of_birth}` : ""}`;
-    facts.push(p.deathday ? born : `${born} (age ${ageBetween(p.birthday, today)})`);
-  } else if (p.place_of_birth) {
-    facts.push(`Born in ${p.place_of_birth}`);
-  }
-  if (p.deathday) {
-    const age = p.birthday ? ` (aged ${ageBetween(p.birthday, p.deathday)})` : "";
-    facts.push(`Died ${formatDate(p.deathday)}${age}`);
-  }
-  return facts;
 }
 
 function Filmography({ title, rows, rolePrefix }: { title: string; rows: FilmographyRow[]; rolePrefix?: string }) {
@@ -86,7 +71,6 @@ export default async function PersonPage({ params }: Props) {
   if (`/person/${raw}` !== canonical) permanentRedirect(canonical);
 
   const { acting, crew } = filmography(person.credits);
-  const facts = lifeFacts(person, person.as_of);
   // Acting first for actors, crew first for directors, writers and the rest.
   const crewFirst = person.known_for_department && person.known_for_department !== "Acting";
   const sections = [
@@ -101,18 +85,17 @@ export default async function PersonPage({ params }: Props) {
         <div className="title-text">
           <h1>{person.name}</h1>
           {person.known_for_department && <p className="facts">Known for {person.known_for_department}</p>}
-          {facts.map((f) => (
-            <p key={f} className="facts">
-              {f}
-            </p>
-          ))}
-          {person.biography && (
-            <div className="bio">
-              {person.biography.split(/\n+/).map((para, i) => (
-                <p key={i}>{para}</p>
-              ))}
-            </div>
-          )}
+          <PersonFacts
+            id={person.tmdb_id}
+            initial={{
+              biography: person.biography,
+              birthday: person.birthday,
+              deathday: person.deathday,
+              place_of_birth: person.place_of_birth,
+            }}
+            stale={person.details_stale}
+            asOf={person.as_of}
+          />
           <p className="ext-links">
             <a href={`https://www.themoviedb.org/person/${person.tmdb_id}`} target="_blank" rel="noreferrer">
               TMDB

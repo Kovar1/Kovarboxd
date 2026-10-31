@@ -4,6 +4,7 @@ import { MovieGrid } from "@/components/MovieGrid";
 import { PersonList } from "@/components/PersonList";
 import { SearchBox } from "@/components/SearchBox";
 import { searchMovies, searchPeople } from "@/lib/catalog";
+import { strongNameMatch } from "@/lib/search";
 
 export const metadata: Metadata = { title: "Search" };
 
@@ -36,6 +37,21 @@ async function Results({ searchParams }: Props) {
   }
 
   const [movies, people] = await Promise.all([searchMovies(q, 30), searchPeople(q, 20)]);
+  const peopleSection = people.length > 0 && (
+    <section key="people">
+      <h2>People</h2>
+      <PersonList people={people} />
+    </section>
+  );
+  const movieSection = movies.length > 0 && (
+    <section key="movies">
+      <h2>Movies</h2>
+      <MovieGrid movies={movies} />
+    </section>
+  );
+  // Movies first, unless the query is clearly someone's name ("tom han").
+  const peopleFirst = people.length > 0 && strongNameMatch(q, people[0].name);
+
   return (
     <>
       <h1>Results for &ldquo;{q}&rdquo;</h1>
@@ -43,18 +59,7 @@ async function Results({ searchParams }: Props) {
         <SearchBox key={q} initialQuery={q} />
       </div>
       {!movies.length && !people.length && <p className="empty">Nothing found. Check the spelling, or try fewer words.</p>}
-      {people.length > 0 && (
-        <>
-          <h2>People</h2>
-          <PersonList people={people} />
-        </>
-      )}
-      {movies.length > 0 && (
-        <>
-          <h2>Movies</h2>
-          <MovieGrid movies={movies} />
-        </>
-      )}
+      {peopleFirst ? [peopleSection, movieSection] : [movieSection, peopleSection]}
     </>
   );
 }

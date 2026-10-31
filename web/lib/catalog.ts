@@ -1,6 +1,7 @@
 import "server-only";
-import { cacheLife } from "next/cache";
-import { adminDb, catalogDb } from "./supabase";
+import { cacheLife, cacheTag } from "next/cache";
+import { detailsAreStale } from "./person-details";
+import { catalogDb } from "./supabase";
 import type { FilmCredit, MovieDetail, MovieSummary, PersonDetail, PersonSummary } from "./types";
 
 // Every read here is cached for hours: the catalog only changes when the
@@ -51,14 +52,11 @@ export async function getMovie(id: number): Promise<MovieDetail | null> {
   };
 }
 
-// Person details (biography, birthday, deathday, place of birth) aren't
-// loaded by the pipeline. The first view of a person fetches them from TMDb
-// and saves them, and they're refreshed after this many days.
-const PERSON_DETAILS_MAX_AGE_DAYS = 30;
-
 export async function getPerson(id: number): Promise<PersonDetail | null> {
   "use cache";
   cacheLife("hours");
+  // Lets /api/person/[id]/details refresh this entry after saving new details.
+  cacheTag(`person-${id}`);
   const { data, error } = await catalogDb()
     .from("people")
     .select(
@@ -76,60 +74,13 @@ export async function getPerson(id: number): Promise<PersonDetail | null> {
     details_fetched_at: string | null;
     credits: (Omit<FilmCredit, "movie"> & { movies: FilmCredit["movie"] })[];
   };
-  const result: PersonDetail = {
-    ...(person as Omit<PersonDetail, "credits" | "as_of">),
+  return {
+    ...(person as Omit<PersonDetail, "credits" | "details_stale" | "as_of">),
     credits: credits.map(({ movies, ...c }) => ({ ...c, movie: movies })),
     // Read the clock here, inside the cache, so the page itself stays static.
+    details_stale: detailsAreStale(details_fetched_at),
     as_of: new Date().toISOString().slice(0, 10),
   };
-
-  const ageDays = details_fetched_at ? (Date.now() - Date.parse(details_fetched_at)) / 86_400_000 : Infinity;
-  if (ageDays > PERSON_DETAILS_MAX_AGE_DAYS) {
-    const fresh = await fetchPersonDetails(id);
-    if (fresh) {
-      Object.assign(result, fresh);
-      await savePersonDetails(id, fresh);
-    }
-  }
-  return result;
-}
-
-type PersonDetails = Pick<PersonDetail, "biography" | "birthday" | "deathday" | "place_of_birth">;
-
-async function fetchPersonDetails(id: number): Promise<PersonDetails | null> {
-  const token = process.env.TMDB_API_TOKEN;
-  if (!token) return null;
-  try {
-    const res = await fetch(`https://api.themoviedb.org/3/person/${id}`, {
-      headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
-      signal: AbortSignal.timeout(5000),
-    });
-    if (!res.ok) return null;
-    const p = await res.json();
-    return {
-      biography: p.biography || null,
-      birthday: p.birthday || null,
-      deathday: p.deathday || null,
-      place_of_birth: p.place_of_birth || null,
-    };
-  } catch {
-    // TMDb being slow or down shouldn't break the page: show what we have.
-    return null;
-  }
-}
-
-async function savePersonDetails(id: number, d: PersonDetails): Promise<void> {
-  const db = adminDb();
-  if (!db) return;
-  // Returns false (and saves nothing) once the schema is at 95% of its budget.
-  const { error } = await db.rpc("save_person_details", {
-    person_id: id,
-    new_biography: d.biography,
-    new_birthday: d.birthday,
-    new_deathday: d.deathday,
-    new_place_of_birth: d.place_of_birth,
-  });
-  if (error) console.error(`save_person_details ${id}: ${error.message}`);
 }
 
 export async function searchMovies(q: string, limit = 20): Promise<MovieSummary[]> {
