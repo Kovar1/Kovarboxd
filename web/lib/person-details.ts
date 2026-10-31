@@ -29,14 +29,21 @@ export async function readStoredDetails(id: number): Promise<{ details: PersonDe
 
 export async function fetchPersonDetails(id: number): Promise<PersonDetails | null> {
   const token = process.env.TMDB_API_TOKEN;
-  if (!token) return null;
+  if (!token) {
+    console.error("TMDB_API_TOKEN is not set: person details can't be fetched");
+    return null;
+  }
   try {
     const res = await fetch(`https://api.themoviedb.org/3/person/${id}`, {
       headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
       signal: AbortSignal.timeout(5000),
       cache: "no-store",
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      // 401 here means TMDB_API_TOKEN is wrong.
+      console.error(`TMDb person ${id}: HTTP ${res.status}`);
+      return null;
+    }
     const p = await res.json();
     return {
       biography: p.biography || null,
@@ -44,8 +51,9 @@ export async function fetchPersonDetails(id: number): Promise<PersonDetails | nu
       deathday: p.deathday || null,
       place_of_birth: p.place_of_birth || null,
     };
-  } catch {
+  } catch (err) {
     // TMDb being slow or down shouldn't break the page: show what's stored.
+    console.error(`TMDb person ${id}: ${err}`);
     return null;
   }
 }
