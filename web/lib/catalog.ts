@@ -1,0 +1,146 @@
+import "server-only";
+import { cacheLife, cacheTag } from "next/cache";
+import { detailsAreStale } from "./person-details";
+import { catalogDb } from "./supabase";
+import { rolesByMovie, type RoleRow } from "./together";
+import type { FilmCredit, MovieDetail, MovieSummary, PersonDetail, PersonSummary, TogetherFilm } from "./types";
+
+// Every read here is cached for hours: the catalog only changes when the
+// nightly sync runs. A miss costs one Data API round trip.
+
+const MOVIE_SUMMARY = "tmdb_id, title, release_year, poster_path, popularity";
+
+export async function getPopularMovies(limit = 24): Promise<MovieSummary[]> {
+  "use cache";
+  cacheLife("hours");
+  const { data, error } = await catalogDb()
+    .from("movies")
+    .select(MOVIE_SUMMARY)
+    .order("popularity", { ascending: false })
+    .limit(limit);
+  if (error) throw new Error(`popular movies: ${error.message}`);
+  return data as MovieSummary[];
+}
+
+export async function getMovie(id: number): Promise<MovieDetail | null> {
+  "use cache";
+  cacheLife("hours");
+  const { data, error } = await catalogDb()
+    .from("movies")
+    .select(
+      `tmdb_id, imdb_id, title, original_title, original_language, release_date, release_year,
+       runtime, overview, tagline, poster_path, backdrop_path, popularity, vote_average,
+       vote_count, budget, revenue, status,
+       movie_genres ( genres ( id, name ) ),
+       credits ( credit_id, kind, character, cast_order, department, job,
+                 people ( tmdb_id, name, profile_path ) )`,
+    )
+    .eq("tmdb_id", id)
+    .maybeSingle();
+  if (error) throw new Error(`movie ${id}: ${error.message}`);
+  if (!data) return null;
+
+  // Without generated types supabase-js types every embed as an array, but
+  // genres and people here are many-to-one, so they arrive as single objects.
+  const { movie_genres, credits, ...movie } = data as unknown as Record<string, unknown> & {
+    movie_genres: { genres: { id: number; name: string } }[];
+    credits: (Omit<MovieDetail["credits"][number], "person"> & { people: MovieDetail["credits"][number]["person"] })[];
+  };
+  return {
+    ...(movie as Omit<MovieDetail, "genres" | "credits">),
+    genres: movie_genres.map((g) => g.genres).sort((a, b) => a.name.localeCompare(b.name)),
+    credits: credits.map(({ people, ...c }) => ({ ...c, person: people })),
+  };
+}
+
+export async function getPerson(id: number): Promise<PersonDetail | null> {
+  "use cache";
+  cacheLife("hours");
+  // Lets /api/person/[id]/details refresh this entry after saving new details.
+  cacheTag(`person-${id}`);
+  const { data, error } = await catalogDb()
+    .from("people")
+    .select(
+      `tmdb_id, name, profile_path, known_for_department, gender, popularity,
+       biography, birthday, deathday, place_of_birth, details_fetched_at,
+       credits ( credit_id, kind, character, cast_order, department, job,
+                 movies!inner ( tmdb_id, title, release_date, release_year, poster_path, popularity ) )`,
+    )
+    .eq("tmdb_id", id)
+    .maybeSingle();
+  if (error) throw new Error(`person ${id}: ${error.message}`);
+  if (!data) return null;
+
+  const { credits, details_fetched_at, ...person } = data as unknown as Record<string, unknown> & {
+    details_fetched_at: string | null;
+    credits: (Omit<FilmCredit, "movie"> & { movies: FilmCredit["movie"] })[];
+  };
+  return {
+    ...(person as Omit<PersonDetail, "credits" | "details_stale" | "as_of">),
+    credits: credits.map(({ movies, ...c }) => ({ ...c, movie: movies })),
+    // Read the clock here, inside the cache, so the page itself stays static.
+    details_stale: detailsAreStale(details_fetched_at),
+    as_of: new Date().toISOString().slice(0, 10),
+  };
+}
+
+const PERSON_SUMMARY = "tmdb_id, name, profile_path, known_for_department, popularity";
+
+/** The people with these ids, in the same order. Unknown ids are left out. */
+export async function getPeople(ids: number[]): Promise<PersonSummary[]> {
+  "use cache";
+  cacheLife("hours");
+  if (!ids.length) return [];
+  const { data, error } = await catalogDb().from("people").select(PERSON_SUMMARY).in("tmdb_id", ids);
+  if (error) throw new Error(`people ${ids}: ${error.message}`);
+  const byId = new Map((data as PersonSummary[]).map((p) => [p.tmdb_id, p]));
+  return ids.flatMap((id) => byId.get(id) ?? []);
+}
+
+/**
+ * Every movie all of these people have a credit on, newest first, with each
+ * person's roles. Uses kovarboxd.films_together, then one query for roles.
+ */
+export async function getFilmsTogether(ids: number[]): Promise<TogetherFilm[]> {
+  "use cache";
+  cacheLife("hours");
+  const db = catalogDb();
+  const { data, error } = await db
+    .rpc("films_together", { person_ids: ids })
+    .select("tmdb_id, title, release_date, release_year, poster_path, popularity");
+  if (error) throw new Error(`films together ${ids}: ${error.message}`);
+  const movies = data as unknown as (MovieSummary & { release_date: string | null })[];
+  if (!movies.length) return [];
+
+  const { data: credits, error: creditsError } = await db
+    .from("credits")
+    .select("person_id, movie_id, kind, character, job")
+    .in("person_id", ids)
+    .in(
+      "movie_id",
+      movies.map((m) => m.tmdb_id),
+    );
+  if (creditsError) throw new Error(`films together roles ${ids}: ${creditsError.message}`);
+  const roles = rolesByMovie(credits as RoleRow[]);
+
+  return movies.map((m) => ({
+    ...m,
+    roles: ids.map((person_id) => ({ person_id, roles: roles.get(m.tmdb_id)?.get(person_id) ?? [] })),
+  }));
+}
+
+export async function searchMovies(q: string, limit = 20): Promise<MovieSummary[]> {
+  "use cache";
+  cacheLife("hours");
+  const { data, error } = await catalogDb().rpc("search_movies", { q, max_results: limit });
+  if (error) throw new Error(`search movies: ${error.message}`);
+  return data as MovieSummary[];
+}
+
+export async function searchPeople(q: string, limit = 20): Promise<PersonSummary[]> {
+  "use cache";
+  cacheLife("hours");
+  const { data, error } = await catalogDb().rpc("search_people", { q, max_results: limit });
+  if (error) throw new Error(`search people: ${error.message}`);
+  return data as PersonSummary[];
+}
