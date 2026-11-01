@@ -16,7 +16,12 @@ export function LoginForm({ next, linkError = false }: { next: string; linkError
           {pending ? "Logging in..." : "Log in"}
         </button>
         {state?.error && <p className="form-error">{state.error}</p>}
-        {!state && linkError && <p className="form-error">That link expired or was already used. Try again.</p>}
+        {!state && linkError && (
+          <p className="form-error">
+            That link didn&apos;t work. It may have expired, been used already, or been opened in a different browser
+            from the one that asked for it.
+          </p>
+        )}
       </form>
       <p className="form-links">
         <Link href="/reset">Forgot password?</Link>
