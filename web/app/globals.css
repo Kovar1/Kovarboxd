@@ -145,6 +145,30 @@ h2 .count { color: var(--line); margin-left: 6px; }
   border: none; border-radius: 999px; padding: 8px 18px;
 }
 
+/* ---- Log out, login and signup ---- */
+.logout { flex: none; margin-left: auto; }
+.logout button {
+  font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+  color: var(--muted); background: none;
+  border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px;
+}
+.logout button:hover { color: var(--text); border-color: var(--muted); }
+.auth-page { max-width: 400px; padding-top: 56px; }
+.auth-page h1 { margin-bottom: 6px; }
+.auth-form { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; }
+.auth-form input {
+  padding: 11px 14px; font: inherit; font-size: 16px;
+  color: var(--text); background: var(--surface);
+  border: 1px solid var(--line); border-radius: var(--radius); outline: none;
+}
+.auth-form input:focus { border-color: var(--accent); }
+.auth-form .button { padding: 11px 18px; border-radius: var(--radius); }
+.auth-form .button:disabled { opacity: 0.6; cursor: default; }
+.form-error { color: #ff6b6b; font-size: 14px; margin: 2px 0 0; }
+.form-message { color: #5dd39e; font-size: 14px; margin: 2px 0 0; }
+.form-links { display: flex; justify-content: space-between; gap: 12px; margin-top: 16px; font-size: 14px; color: var(--muted); }
+.form-links a { color: var(--accent); }
+
 /* ---- Footer ---- */
 .site-footer {
   max-width: 1100px; margin: 0 auto; padding: 24px 24px 40px;
@@ -247,5 +271,8 @@ h2 .count { color: var(--line); margin-left: 6px; }
   .cast-grid { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
   .suggestion-kind { display: none; }
   .nav-link { font-size: 13px; }
+  .logout button { padding: 5px 10px; font-size: 12px; }
+  .site-header { flex-wrap: wrap; }
+  .site-header .search-box { order: 3; flex-basis: 100%; max-width: none; }
   .together-poster { width: 52px; }
 }

@@ -1,20 +1,21 @@
 import type { Metadata } from "next";
-import { Footer, Header } from "@/components/SiteChrome";
+import { Footer } from "@/components/SiteChrome";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: { default: "Kovarboxd", template: "%s | Kovarboxd" },
-  description: "Search movies and the people who make them.",
-  // Not for search engines until Phase 4 puts the app behind a login.
+  description: "Every film a group of people made together.",
+  // An invite-only app: nothing here is meant for search engines.
   robots: { index: false, follow: false },
 };
 
+// The header lives in the (site) and (auth) layouts: logged-in pages get
+// search and "Log out", the login pages get just the name.
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
       <body>
-        <Header />
-        <main>{children}</main>
+        {children}
         <Footer />
       </body>
     </html>

@@ -32,9 +32,7 @@ export async function GET(request: NextRequest) {
       href: personPath(p.tmdb_id, p.name),
     })),
   ];
-  // The catalog changes nightly, so the CDN can serve repeat queries.
-  return NextResponse.json(
-    { suggestions },
-    { headers: { "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400" } },
-  );
+  // Login required, so never cached on the shared CDN, only in this browser.
+  // The search functions themselves are cached on the server (lib/catalog.ts).
+  return NextResponse.json({ suggestions }, { headers: { "Cache-Control": "private, max-age=600" } });
 }

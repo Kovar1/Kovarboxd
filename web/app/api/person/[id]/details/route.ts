@@ -1,5 +1,6 @@
 import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
+import { createAuthClient } from "@/lib/auth-client";
 import { detailsAreStale, fetchPersonDetails, readStoredDetails, savePersonDetails } from "@/lib/person-details";
 import { parseIdParam } from "@/lib/slug";
 
@@ -7,6 +8,13 @@ import { parseIdParam } from "@/lib/slug";
 // missing or older than 30 days. POST, so prefetches and crawlers don't
 // trigger it. Answers with the details to show.
 export async function POST(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  // proxy.ts already turns away logged-out requests. This route writes to the
+  // database, so it checks again rather than rely on the proxy alone.
+  const {
+    data: { user },
+  } = await (await createAuthClient()).auth.getUser();
+  if (!user) return NextResponse.json({ error: "login required" }, { status: 401 });
+
   const id = parseIdParam((await params).id);
   if (!id) return NextResponse.json({ error: "bad id" }, { status: 400 });
 

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { signOut } from "@/lib/auth-actions";
 import { SearchBox } from "./SearchBox";
 
 export function Header() {
@@ -11,6 +12,18 @@ export function Header() {
         Films together
       </Link>
       <SearchBox />
+      <form action={signOut} className="logout">
+        <button>Log out</button>
+      </form>
+    </header>
+  );
+}
+
+/** The header on the login, signup and password pages: just the name. */
+export function AuthHeader() {
+  return (
+    <header className="site-header">
+      <span className="brand">Kovarboxd</span>
     </header>
   );
 }

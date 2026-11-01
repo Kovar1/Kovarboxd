@@ -86,6 +86,29 @@ member in a job outside that list, won't connect films.
 
 Every person page links here with that person already picked.
 
+## Login
+
+The whole site is invite-only. `proxy.ts` (Next 16's name for middleware)
+runs before every request: it refreshes the Supabase session cookie, sends
+logged-out visitors to `/login?next=<where they were going>`, and answers
+API routes with 401. The person details route also checks the login itself,
+since it writes to the database.
+
+Accounts are shared with AMC-Assistant: both apps use the same Supabase
+project, so the invite list (`public.allowed_users`), the trigger that blocks
+uninvited signups, and the 25 account cap all come from AMC-Assistant's
+migration 0003. One invite covers both apps. Invite someone with
+AMC-Assistant's `scripts/invite.mjs`. The two sites keep separate login
+cookies, so you log in to each once, with the same email and password.
+
+Pages: `/login`, `/signup`, `/reset` (sends a reset email), `/update-password`
+(where the reset email lands), and `/auth/confirm` (checks links from emails).
+Links in emails point back to whichever site sent them, so Supabase's
+Redirect URLs list must include this site's addresses.
+
+Catalog reads don't use the login: they're the same for everyone, so they stay
+cached and keep using the anon key on the server.
+
 ## Person details on demand
 
 The pipeline doesn't load biographies, birthdays or birthplaces. When someone
@@ -104,8 +127,8 @@ That function refuses to write once the `kovarboxd` schema reaches 95% of its
 300 MB budget, the same stop line the pipeline uses. Measured on 2026-10-31,
 a biography averages about 1 KB for the 1,000 most popular people and 121
 bytes for a random person (77% have none), so even every person page being
-visited would add roughly 40 MB. `robots.txt` and a `noindex` tag keep
-crawlers away until Phase 4 adds login.
+visited would add roughly 40 MB. Only logged-in people can reach person
+pages, and `robots.txt` plus a `noindex` tag keep crawlers away regardless.
 
 ## Deploying to Vercel
 
