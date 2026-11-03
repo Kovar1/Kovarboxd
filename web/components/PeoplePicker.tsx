@@ -13,7 +13,15 @@ import { useSuggestions } from "./useSuggestions";
  * Suggestions show a photo and department, so people with the same name can
  * be told apart.
  */
-export function PeoplePicker({ selected, autoFocus = false }: { selected: PersonSummary[]; autoFocus?: boolean }) {
+export function PeoplePicker({
+  selected,
+  autoFocus = false,
+  unseenOnly = false,
+}: {
+  selected: PersonSummary[];
+  autoFocus?: boolean;
+  unseenOnly?: boolean;
+}) {
   const router = useRouter();
   const listId = useId();
   const [query, setQuery] = useState("");
@@ -39,7 +47,7 @@ export function PeoplePicker({ selected, autoFocus = false }: { selected: Person
     setQuery("");
     setOpen(false);
     setActive(-1);
-    startTransition(() => router.push(togetherPath(next), { scroll: false }));
+    startTransition(() => router.push(togetherPath(next, unseenOnly), { scroll: false }));
   };
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {

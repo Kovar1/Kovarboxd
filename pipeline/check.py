@@ -5,7 +5,7 @@
 
 from pipeline import config, db
 
-TABLES = ["movies", "genres", "movie_genres", "people", "credits", "pipeline_runs", "schema_migrations"]
+TABLES = ["movies", "genres", "movie_genres", "people", "credits", "seen", "watchlist", "pipeline_runs", "schema_migrations"]
 MB = 1024 * 1024
 
 

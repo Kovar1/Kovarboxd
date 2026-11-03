@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
+import { Suspense } from "react";
+import { MovieListControls } from "@/components/MyListBits";
 import { TmdbImage } from "@/components/TmdbImage";
 import { getMovie, getPopularMovies } from "@/lib/catalog";
 import { castOf, crewByJob } from "@/lib/credits";
@@ -70,6 +72,10 @@ export default async function MoviePage({ params }: Props) {
             <p className="sub">Original title: {movie.original_title}</p>
           )}
           {facts.length > 0 && <p className="facts">{facts.join("  |  ")}</p>}
+          {/* Personal, so it streams in. The rest of this page stays cached. */}
+          <Suspense fallback={<div className="list-buttons" />}>
+            <MovieListControls movieId={movie.tmdb_id} />
+          </Suspense>
           {movie.tagline && <p className="tagline">{movie.tagline}</p>}
           {movie.overview && <p className="overview">{movie.overview}</p>}
           {crew.length > 0 && (

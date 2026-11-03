@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
+import { Suspense } from "react";
 import { MovieGrid } from "@/components/MovieGrid";
+import { PersonSeenCount } from "@/components/MyListBits";
 import { PersonFacts } from "@/components/PersonFacts";
 import { TmdbImage } from "@/components/TmdbImage";
 import { getPerson, getPopularMovies, getMovie } from "@/lib/catalog";
@@ -86,6 +88,9 @@ export default async function PersonPage({ params }: Props) {
         <div className="title-text">
           <h1>{person.name}</h1>
           {person.known_for_department && <p className="facts">Known for {person.known_for_department}</p>}
+          <Suspense fallback={null}>
+            <PersonSeenCount movieIds={[...new Set(person.credits.map((c) => c.movie.tmdb_id))]} />
+          </Suspense>
           <PersonFacts
             id={person.tmdb_id}
             initial={{

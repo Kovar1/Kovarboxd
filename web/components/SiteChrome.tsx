@@ -11,6 +11,9 @@ export function Header() {
       <Link className="nav-link" href="/together">
         Films together
       </Link>
+      <Link className="nav-link" href="/me">
+        My lists
+      </Link>
       <SearchBox />
       <form action={signOut} className="logout">
         <button>Log out</button>

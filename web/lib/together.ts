@@ -30,8 +30,9 @@ export function splitPeopleQuery(q: string): string[] {
     .slice(0, MAX_PEOPLE);
 }
 
-export function togetherPath(ids: number[]): string {
-  return ids.length ? `/together?ids=${ids.join(",")}` : "/together";
+export function togetherPath(ids: number[], unseenOnly = false): string {
+  if (!ids.length) return "/together";
+  return `/together?ids=${ids.join(",")}${unseenOnly ? "&unseen=1" : ""}`;
 }
 
 export type RoleRow = {
