@@ -122,6 +122,9 @@ To run a backfill batch by hand: Actions > Nightly TMDb sync > Run workflow,
 and fill in "backfill_limit" with a number of movies. Leave it empty for a
 normal sync.
 
+GitHub can start scheduled runs hours late (the first ones started 7 to 10 hours
+after 09:17 UTC). That's harmless: the export is already published by then.
+
 GitHub only runs scheduled workflows from the default branch, so the nightly
 schedule starts once this is merged into `main`. Until then it can be run by
 hand from the branch: `gh workflow run nightly-sync.yml --ref remodel/tmdb`.

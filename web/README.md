@@ -14,6 +14,7 @@ This product uses the TMDB API but is not endorsed or certified by TMDB.
 | `/` | The films-together picker with example searches, then the most popular movies |
 | `/together?ids=1032,380,4517` | Films together: every movie all the chosen people have a credit on, newest first, with each person's roles. Up to 6 people. The URL can be shared |
 | `/me` | Your seen list and watchlist |
+| `/me/insights` | Your numbers: films by decade, genres, directors, actors, and the people you've seen together most |
 | `/search?q=` | Movie and people results. The header search box shows suggestions as you type, from `/api/search` |
 | `/movie/769-goodfellas` | Poster, backdrop, facts, overview, key crew by job, top billed cast, IMDb and TMDB links |
 | `/person/1032-martin-scorsese` | Photo, life facts, biography, known for, filmography as cast and crew, newest first |
@@ -129,6 +130,16 @@ watchlist. Marking a movie seen also takes it off the watchlist.
   themselves and call `refresh()` so counts update without a reload.
 - A movie on someone's list can't be deleted, which protects lists from any
   future catalog cleanup.
+
+## Insights
+
+`/me/insights` calls `kovarboxd.my_insights()` (migration 0006), one SQL function
+that returns all the numbers. It runs with the caller's permissions, so the seen
+table's RLS limits it to their rows. "People you've seen together most" uses each
+film's top 10 billed cast and directors, and links to films together. Charts are
+plain HTML bars with the value at the tip, with no chart library. The bar color
+`--chart-bar` is the accent darkened until it passes the chart palette check
+against the dark background.
 
 ## Person details on demand
 

@@ -303,3 +303,21 @@ h2 .count { color: var(--line); margin-left: 6px; }
   .site-header .search-box { order: 3; flex-basis: 100%; max-width: none; }
   .together-poster { width: 52px; }
 }
+
+/* ---- Insights ---- */
+:root { --chart-bar: #dc6a1e; } /* The accent, darkened to pass the chart palette check on this surface. */
+.stat-row { display: flex; flex-wrap: wrap; gap: 14px; margin: 0 0 26px; }
+.stat-row > div { flex: 1 1 150px; padding: 16px 18px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+.stat-row dd { margin: 0; font-size: 34px; font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.stat-row dt { margin-top: 4px; font-size: 13px; color: var(--muted); }
+.chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 30px 34px; }
+.chart { margin: 0; min-width: 0; }
+.chart figcaption { margin-bottom: 12px; font-size: 13px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--muted); }
+.bars { margin: 0; padding: 0; list-style: none; }
+.bars li { display: grid; grid-template-columns: minmax(0, 44%) minmax(0, 1fr); align-items: center; gap: 10px; padding: 4px 2px; border-radius: 4px; }
+.bars li:hover { background: var(--surface); }
+.bar-label { font-size: 14px; line-height: 1.25; overflow-wrap: anywhere; }
+.bar-label a { font-weight: 600; }
+.bar-track { display: flex; align-items: center; gap: 8px; min-width: 0; padding-right: 34px; }
+.bar { display: block; height: 14px; min-width: 2px; background: var(--chart-bar); border-radius: 0 4px 4px 0; }
+.bar-value { flex: none; font-size: 13px; color: var(--text); font-variant-numeric: tabular-nums; margin-right: -34px; }

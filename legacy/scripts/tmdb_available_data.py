@@ -1,7 +1,8 @@
+import os
 import requests
 import json
 
-TMDB_API_KEY = '85157fd687373ec6ae64b5aa60149b1f'
+TMDB_API_KEY = os.environ['TMDB_API_KEY']
 
 print("=== Testing TMDb Movie API ===")
 # Test with a popular movie - The Dark Knight (tt0468569)
