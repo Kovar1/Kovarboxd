@@ -3,10 +3,19 @@ import { getPeople } from "@/lib/catalog";
 import { moviePath, personPath } from "@/lib/slug";
 import { togetherPath } from "@/lib/together";
 import type { PersonSummary, TogetherFilm } from "@/lib/types";
+import { SeenToggle } from "./ListButtons";
 import { TmdbImage } from "./TmdbImage";
 
-/** Shared films, newest first, with what each person did on each one. */
-export function TogetherResults({ films, people }: { films: TogetherFilm[]; people: PersonSummary[] }) {
+/** Shared films, newest first, with what each person did on each one and whether you've seen it. */
+export function TogetherResults({
+  films,
+  people,
+  seen,
+}: {
+  films: TogetherFilm[];
+  people: PersonSummary[];
+  seen: Set<number>;
+}) {
   const byId = new Map(people.map((p) => [p.tmdb_id, p]));
   return (
     <ol className="together-list">
@@ -15,7 +24,8 @@ export function TogetherResults({ films, people }: { films: TogetherFilm[]; peop
           <Link href={moviePath(f.tmdb_id, f.title)} className="together-poster" tabIndex={-1} aria-hidden>
             <TmdbImage path={f.poster_path} alt={f.title} width={92} aspect="poster" />
           </Link>
-          <div>
+          <div className="together-film">
+            <SeenToggle movieId={f.tmdb_id} initial={seen.has(f.tmdb_id)} />
             <Link href={moviePath(f.tmdb_id, f.title)} className="together-title">
               {f.title}
             </Link>{" "}

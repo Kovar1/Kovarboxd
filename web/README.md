@@ -13,6 +13,7 @@ This product uses the TMDB API but is not endorsed or certified by TMDB.
 | --- | --- |
 | `/` | The films-together picker with example searches, then the most popular movies |
 | `/together?ids=1032,380,4517` | Films together: every movie all the chosen people have a credit on, newest first, with each person's roles. Up to 6 people. The URL can be shared |
+| `/me` | Your seen list and watchlist |
 | `/search?q=` | Movie and people results. The header search box shows suggestions as you type, from `/api/search` |
 | `/movie/769-goodfellas` | Poster, backdrop, facts, overview, key crew by job, top billed cast, IMDb and TMDB links |
 | `/person/1032-martin-scorsese` | Photo, life facts, biography, known for, filmography as cast and crew, newest first |
@@ -108,6 +109,26 @@ Redirect URLs list must include this site's addresses.
 
 Catalog reads don't use the login: they're the same for everyone, so they stay
 cached and keep using the anon key on the server.
+
+## Seen and watchlist
+
+Each person can mark a movie seen, with an optional date, or add it to their
+watchlist. Marking a movie seen also takes it off the watchlist.
+
+- **Where it shows:** Mark seen and + Watchlist buttons on movie pages, a seen
+  toggle on each films-together result with "You've seen 2 of 4" and "Hide what
+  I've seen", a count on person pages, and both lists at `/me`.
+- **Data:** `kovarboxd.seen` and `kovarboxd.watchlist` (migration 0005). RLS lets
+  each person read and write only their own rows, and the anon role has no
+  grants at all. `tests/pipeline/test_user_lists_rls.py` proves this against the
+  real database, acting as two existing users in a transaction that always
+  rolls back.
+- **Caching:** pages stay cached. The personal parts (`components/MyListBits.tsx`)
+  read the session, so they sit inside `<Suspense>` and stream in. Changes go
+  through server actions in `lib/list-actions.ts`, which check the login
+  themselves and call `refresh()` so counts update without a reload.
+- A movie on someone's list can't be deleted, which protects lists from any
+  future catalog cleanup.
 
 ## Person details on demand
 
