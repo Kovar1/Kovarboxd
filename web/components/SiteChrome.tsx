@@ -14,6 +14,10 @@ export function Header() {
       <Link className="nav-link" href="/me">
         My lists
       </Link>
+      {/* Phones reach this through the tab in My lists: the header has no room. */}
+      <Link className="nav-link nav-link-wide" href="/me/insights">
+        Insights
+      </Link>
       <SearchBox />
       <form action={signOut} className="logout">
         <button>Log out</button>

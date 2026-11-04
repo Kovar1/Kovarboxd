@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Suspense } from "react";
+import { ListTabs } from "@/components/ListTabs";
 import { MovieGrid } from "@/components/MovieGrid";
-import { getListCounts, getMyList } from "@/lib/user-lists";
+import { getMyList } from "@/lib/user-lists";
 
 export const metadata: Metadata = { title: "My lists" };
 
@@ -21,18 +21,11 @@ export default function MyListsPage({ searchParams }: Props) {
 
 async function MyLists({ searchParams }: Props) {
   const list = (await searchParams).list === "watchlist" ? "watchlist" : "seen";
-  const [counts, movies] = await Promise.all([getListCounts(), getMyList(list)]);
+  const movies = await getMyList(list);
 
   return (
     <>
-      <nav className="list-tabs" aria-label="My lists">
-        <Link href="/me" className={list === "seen" ? "active" : ""}>
-          Seen <span className="count">{counts.seen}</span>
-        </Link>
-        <Link href="/me?list=watchlist" className={list === "watchlist" ? "active" : ""}>
-          Watchlist <span className="count">{counts.watchlist}</span>
-        </Link>
-      </nav>
+      <ListTabs active={list} />
       {movies.length > 0 ? (
         <MovieGrid movies={movies} />
       ) : (
