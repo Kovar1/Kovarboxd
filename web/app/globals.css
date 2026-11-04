@@ -297,6 +297,7 @@ h2 .count { color: var(--line); margin-left: 6px; }
   .cast-grid { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
   .suggestion-kind { display: none; }
   .nav-link { font-size: 12px; }
+  .nav-link-wide { display: none; }
   .site-header { gap: 10px; }
   .logout button { padding: 5px 10px; font-size: 12px; }
   .site-header { flex-wrap: wrap; }
