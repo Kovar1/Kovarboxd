@@ -172,6 +172,16 @@ have added. Popular movies have the longest crew lists: on the top 2,000
 alone, 82% of credits were trimmed, against 44% for movies between
 popularity 3.0 and 3.2.
 
+### Nightly size churn
+
+The first nightly syncs grew the `movies` table from 25 MB to 55 MB with almost
+no new movies. Popularity changes on every movie daily, and it was the key of
+an index, so every change rewrote the row and all its index entries (184,640
+updates, none of them HOT). Migration 0004 takes popularity out of that index,
+and the sync now skips popularity changes under 10% (`POPULARITY_MIN_CHANGE`),
+which over two days skipped 46% of the writes. The space already used stays
+allocated and gets reused; only `VACUUM FULL` returns it.
+
 ### Popularity cutoff
 
 Picked by measuring rather than guessing:
@@ -214,7 +224,8 @@ pile up. Between the two exports a quarter of the top 35,000 changed.
 
 So the sync has its own, much higher entry cutoff, 8. Over those two days
 only 8 movies not already stored reached it, against 84 at 6 and 364 at 5.
-That's about 4 a day, mostly new releases, roughly 10 MB a year. The 11,149
+In practice about 9 a day get in (measured over the first nightly runs), mostly
+new releases, roughly 20 MB a year. The 11,149
 movies the catch-up sync added below 8 were deleted, along with their credits
 and the people credited only in them.
 

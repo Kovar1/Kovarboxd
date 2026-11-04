@@ -25,8 +25,12 @@ POPULARITY_CUTOFF = 3.0
 # Popularity near 3.0 swings 20% or more from day to day, so thousands of
 # movies cross 3.0 every day, and since movies are never dropped the catalog
 # would keep growing (one catch-up sync added 11,157 in two days). At 8, about
-# 4 movies a day get in: new releases and real revivals, about 10 MB a year.
+# 9 movies a day get in (measured): new releases and revivals, about 20 MB a year.
 SYNC_ENTRY_CUTOFF = 8.0
+
+# Popularity is only rewritten when it moved by at least this share. It only
+# affects ranking, and rewriting every row nightly wastes space on dead rows.
+POPULARITY_MIN_CHANGE = 0.10
 
 
 # Size budget ----------------------------------------------------------------

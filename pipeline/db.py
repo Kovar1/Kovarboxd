@@ -70,7 +70,11 @@ def stored_movies(conn):
 
 
 def refresh_popularity(conn, popularity):
-    """Set popularity from a {tmdb_id: popularity} dict. Returns rows changed."""
+    """Set popularity from a {tmdb_id: popularity} dict. Returns rows changed.
+
+    Small changes are skipped: popularity only affects ranking, and rewriting
+    all 35,000 rows every night wasted about 30 MB of the size budget.
+    """
     with conn.transaction():
         conn.execute("create temp table export_pop (tmdb_id integer, popularity real) on commit drop")
         with conn.cursor().copy("copy export_pop (tmdb_id, popularity) from stdin") as copy:
@@ -81,8 +85,11 @@ def refresh_popularity(conn, popularity):
             update kovarboxd.movies m
             set popularity = e.popularity
             from export_pop e
-            where m.tmdb_id = e.tmdb_id and m.popularity is distinct from e.popularity
-            """
+            where m.tmdb_id = e.tmdb_id
+              and (m.popularity is null
+                   or abs(m.popularity - e.popularity) > %s * greatest(m.popularity, 0.01))
+            """,
+            [config.POPULARITY_MIN_CHANGE],
         )
         return cur.rowcount
 
@@ -166,16 +173,19 @@ UPSERT_MOVIE = (
     + ", details_fetched_at = now(), updated_at = now(), removed_at = null"
 )
 # Only rewrite a person when something changed, which keeps dead rows down
-# when the same actor shows up in hundreds of movies.
+# when the same actor shows up in hundreds of movies. Popularity alone has to
+# move by POPULARITY_MIN_CHANGE to count, same as for movies.
+_PERSON_FIELDS = [c for c in PEOPLE_COLUMNS[1:] if c != "popularity"]
 UPSERT_PERSON = (
     _insert_sql("people", PEOPLE_COLUMNS)
     + " on conflict (tmdb_id) do update set "
     + _set_from_excluded(PEOPLE_COLUMNS[1:])
     + " where ("
-    + ", ".join(f"people.{c}" for c in PEOPLE_COLUMNS[1:])
+    + ", ".join(f"people.{c}" for c in _PERSON_FIELDS)
     + ") is distinct from ("
-    + ", ".join(f"excluded.{c}" for c in PEOPLE_COLUMNS[1:])
-    + ")"
+    + ", ".join(f"excluded.{c}" for c in _PERSON_FIELDS)
+    + ") or people.popularity is null or abs(people.popularity - excluded.popularity)"
+    + f" > {config.POPULARITY_MIN_CHANGE} * greatest(people.popularity, 0.01)"
 )
 UPSERT_CREDIT = (
     _insert_sql("credits", CREDIT_COLUMNS)
