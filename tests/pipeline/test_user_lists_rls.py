@@ -72,7 +72,8 @@ def test_other_people_cant_see_change_or_delete_them(conn, two_users, table):
     assert conn.execute(f"update kovarboxd.{table} set created_at = now() where user_id = %s", [me]).rowcount == 0
 
     act_as(conn, me)
-    assert conn.execute(f"select count(*) from kovarboxd.{table} where user_id = %s", [me]).fetchone()[0] == 1
+    # Only this row: the account may have real rows of its own.
+    assert conn.execute(f"select count(*) from kovarboxd.{table} where user_id = %s and movie_id = %s", [me, GOODFELLAS]).fetchone()[0] == 1
 
 
 @pytest.mark.parametrize("table", TABLES)

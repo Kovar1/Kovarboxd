@@ -18,9 +18,9 @@ Live at <https://kovarboxd.vercel.app>. Invite-only.
 | | |
 | --- | --- |
 | ![Home page with the people picker](docs/home.jpg) | ![GoodFellas movie page with seen and watchlist buttons](docs/movie.jpg) |
-| ![Robert Duvall person page](docs/person.jpg) | ![Insights page with bar charts. The numbers in this screenshot are sample data.](docs/insights.jpg) |
+| ![Martin Scorsese person page](docs/person.jpg) | ![Insights page with bar charts. The numbers in this screenshot are sample data.](docs/insights.jpg) |
 
-The insights screenshot uses sample numbers.
+The Seen marks and the insights numbers in these screenshots are sample data.
 
 ## How it's built
 
@@ -47,6 +47,7 @@ A few decisions worth knowing about:
 - **A size budget, enforced.** The database shares a free 500 MB plan with another app. The pipeline measures its own size and stops adding movies at 95% of budget.
 - **Credits are trimmed.** Top 25 billed cast and key crew jobs keep 38% of TMDb's credits and fit the budget. The trade-off: someone billed 40th won't connect two films.
 - **Two popularity cutoffs.** Popularity near the 3.0 backfill cutoff swings 20% a day, so the nightly sync only adds movies at 8 or above. The [pipeline README](pipeline/README.md) has the measurements.
+- **A design from film, not from a template.** The yellow and red are sampled from the Kodak logo, the side stripes come from film edges and the suit in *Kill Bill*, and the rough edges come from cut-paper title sequences. Posters print black on yellow in lists and show real color on the movie page.
 - **Invite-only in the database.** A trigger on the auth table blocks any signup not on the invite list, and each person's lists are private through Row-Level Security.
 
 ## Running it

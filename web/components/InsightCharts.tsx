@@ -23,7 +23,7 @@ export function BarChart({ title, bars, unit = "film" }: { title: string; bars: 
               <span className="bar-label">{label}</span>
               <span className="bar-track">
                 <span
-                  className={bar.count === max ? "bar top" : "bar"}
+                  className={bar.count === max ? "fill top" : "fill"}
                   style={{
                     width: `${barPercent(bar.count, max)}%`,
                     clipPath: cutOutline(bar.count * 31 + bar.label.length, 1.4),

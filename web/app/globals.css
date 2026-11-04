@@ -54,7 +54,7 @@ main { min-width: 0; }
 .hd:has(+ main .p-together) .nav-together,
 .hd:has(+ main .p-lists) .nav-lists,
 .hd:has(+ main .p-insights) .nav-insights { border-bottom-color: var(--k); }
-.search-box { position: relative; margin-left: auto; flex: 0 1 300px; min-width: 210px; }
+.search-box { position: relative; margin-left: auto; flex: 0 1 230px; min-width: 170px; }
 .search-box input, .picker-input input {
   width: 100%; background: transparent; border: 0; border-bottom: 3px solid var(--k); border-radius: 0;
   padding: 3px 0; font-weight: 600; font-size: 15px; appearance: none; outline-offset: 3px;
@@ -100,6 +100,8 @@ main { min-width: 0; }
 .picker.pending { opacity: .6; }
 .picker-names { display: grid; gap: 0; }
 .nm { display: flex; align-items: baseline; gap: 12px; }
+.nm .big { font-size: clamp(28px, 4.4vw, 58px); line-height: 1.04; }
+.nm .big.s { font-size: clamp(24px, 3.4vw, 42px); }
 .nm button { background: none; border: 0; cursor: pointer; color: var(--y); font-size: 26px; font-weight: 700; padding: 0 4px; line-height: 1; }
 .picker-input { position: relative; margin-top: 14px; max-width: 420px; }
 .picker-input input { border-bottom-color: var(--y); color: var(--y); font-weight: 800; font-stretch: 82%; text-transform: uppercase; font-size: 18px; }
@@ -113,7 +115,7 @@ main { min-width: 0; }
 /* ---- Star and box label ---- */
 .burst { position: relative; width: min(100%, 220px); margin: -6px 0 8px -8px; container-type: inline-size; }
 .burst svg { display: block; width: 100%; }
-.burst b { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-weight: 900; line-height: 1; font-size: calc(var(--n, 44) * 1cqw); }
+.burst b { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-weight: 900; line-height: 1; font-size: calc(var(--n, 44) * 1cqw); text-transform: uppercase; }
 .lbl { display: grid; grid-template-columns: auto minmax(0, 1fr); border-top: 5px solid var(--k); font-weight: 800; font-stretch: 82%; text-transform: uppercase; font-size: 15px; line-height: 1.3; }
 .lbl > dt, .lbl > dd { padding: 6px 0; border-bottom: 2px solid var(--k); }
 .lbl > dt { padding-right: 14px; }
@@ -228,8 +230,8 @@ a.pr:hover { background: var(--k); color: var(--y); }
 .bar-label { line-height: 1.1; overflow-wrap: anywhere; }
 .bar-label a { text-underline-offset: 2px; }
 .bar-track { min-width: 0; }
-.bar { display: block; height: 21px; min-width: 3px; background: var(--k); }
-.bar.top { background: var(--r); }
+.fill { display: block; height: 21px; min-width: 3px; background: var(--k); }
+.fill.top { background: var(--r); }
 .bar-value { font-weight: 900; font-variant-numeric: tabular-nums; }
 
 /* ---- Log in and messages ---- */
@@ -252,6 +254,11 @@ a.pr:hover { background: var(--k); color: var(--y); }
   .sh img { transition: none; }
   .picker { transition: none; }
 }
+@media (max-width: 1180px) {
+  .wm { font-size: clamp(30px, 3.4vw, 40px); }
+  .hd { gap: 6px 18px; }
+  .bar { gap: 6px 16px; font-size: 15px; }
+}
 @media (max-width: 980px) {
   .hero, .auth { grid-template-columns: minmax(0, 1fr); }
   .pg { grid-template-columns: minmax(0, 1fr); }
@@ -272,13 +279,19 @@ a.pr:hover { background: var(--k); color: var(--y); }
   .stripe { width: 22px; background-size: 22px auto; }
   .hd { position: relative; }
   .hd:has(+ main .home) .wm, .hd-big .wm { font-size: 11.6vw; }
-  .search-box { margin-left: 0; flex: 1 1 100%; }
+  .wm { order: 1; }
+  .logout { order: 2; margin-left: auto; }
+  .bar { order: 3; flex: 1 1 100%; }
+  .search-box { order: 4; margin-left: 0; flex: 1 1 100%; }
+  .hd:has(+ main .home) .logout { order: 5; }
   .suggestions { min-width: 0; }
   .bar { font-size: 15px; gap: 4px 16px; }
   .sl { padding: 20px 18px 58px; }
   .big { font-size: 9vw; }
   .big.m { font-size: 8.2vw; }
   .big.s { font-size: 7.2vw; }
+  .nm .big { font-size: 7vw; }
+  .nm .big.s { font-size: 6vw; }
   .nm button { font-size: 22px; }
   .burst { width: 140px; margin: 0 0 6px -6px; }
   .mg, .mg.two { grid-template-columns: minmax(0, 1fr); }
