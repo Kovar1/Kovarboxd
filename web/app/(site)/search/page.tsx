@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
+import { bigSize, BoxLabel, Burst, SectionHead, Slab } from "@/components/Jumpsuit";
 import { MovieGrid } from "@/components/MovieGrid";
 import { PersonList } from "@/components/PersonList";
 import { SearchBox } from "@/components/SearchBox";
@@ -16,7 +17,15 @@ type Props = { searchParams: Promise<{ q?: string | string[] }> };
 // Suspense while the rest of the page comes from the static shell.
 export default function SearchPage({ searchParams }: Props) {
   return (
-    <Suspense fallback={<p className="empty">Searching...</p>}>
+    <Suspense
+      fallback={
+        <section className="hero">
+          <Slab>
+            <p className="big m cutT">Searching...</p>
+          </Slab>
+        </section>
+      }
+    >
       <Results searchParams={searchParams} />
     </Suspense>
   );
@@ -28,13 +37,13 @@ async function Results({ searchParams }: Props) {
 
   if (q.length < 2) {
     return (
-      <>
-        <h1>Search</h1>
-        <div className="search-page-box">
+      <section className="hero">
+        <Slab>
+          <h1 className="big cutT">Search</h1>
           <SearchBox autoFocus />
-        </div>
-        <p className="empty">Type at least two letters.</p>
-      </>
+          <p>Type at least two letters.</p>
+        </Slab>
+      </section>
     );
   }
 
@@ -51,13 +60,13 @@ async function Results({ searchParams }: Props) {
 
   const peopleSection = people.length > 0 && (
     <section key="people">
-      <h2>People</h2>
+      <SectionHead title="People" />
       <PersonList people={people} />
     </section>
   );
   const movieSection = movies.length > 0 && (
     <section key="movies">
-      <h2>Movies</h2>
+      <SectionHead title="Movies" />
       <MovieGrid movies={movies} />
     </section>
   );
@@ -66,15 +75,27 @@ async function Results({ searchParams }: Props) {
 
   return (
     <>
-      <h1>Results for &ldquo;{q}&rdquo;</h1>
-      <div className="search-page-box">
-        <SearchBox key={q} initialQuery={q} />
-      </div>
+      <section className="hero">
+        <Slab>
+          <p className="meta">Results for</p>
+          <h1 className={bigSize(q)}>{q}</h1>
+          <SearchBox key={q} initialQuery={q} />
+        </Slab>
+        <div className="hero-side">
+          <Burst value={movies.length + people.length} />
+          <BoxLabel
+            rows={[
+              ["Movies", movies.length],
+              ["People", people.length],
+            ]}
+          />
+        </div>
+      </section>
       {together.length >= 2 && (
-        <Link href={togetherPath(together.map((p) => p.tmdb_id))} className="together-offer">
-          <span className="together-offer-label">Films together</span>
-          <span className="together-offer-names">{together.map((p) => p.name).join(" + ")}</span>
-          <span className="together-offer-go">See every film they made together</span>
+        <Link href={togetherPath(together.map((p) => p.tmdb_id))} className="offer">
+          <i />
+          <span>{together.map((p) => p.name).join(" + ")}</span>
+          <u>See every film they made together</u>
         </Link>
       )}
       {!movies.length && !people.length && !together.length && (

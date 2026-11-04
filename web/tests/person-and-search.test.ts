@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { lifeFacts } from "@/lib/format";
+import { lifeRows } from "@/lib/format";
 import { detailsAreStale } from "@/lib/person-details";
 import { strongNameMatch } from "@/lib/search";
 
@@ -30,19 +30,23 @@ describe("detailsAreStale", () => {
   });
 });
 
-describe("lifeFacts", () => {
+describe("lifeRows", () => {
   it("gives age for the living", () => {
-    expect(lifeFacts({ birthday: "1943-02-09", deathday: null, place_of_birth: "Newark, New Jersey, USA" }, "2026-10-31"))
-      .toEqual(["Born February 9, 1943 in Newark, New Jersey, USA (age 83)"]);
+    expect(lifeRows({ birthday: "1943-02-09", deathday: null, place_of_birth: "Newark, New Jersey, USA" }, "2026-10-31")).toEqual([
+      ["Born", "February 9, 1943 (age 83)"],
+      ["From", "Newark, New Jersey, USA"],
+    ]);
   });
 
   it("gives age at death for the dead", () => {
-    expect(lifeFacts({ birthday: "1928-07-26", deathday: "1999-03-07", place_of_birth: null }, "2026-10-31"))
-      .toEqual(["Born July 26, 1928", "Died March 7, 1999 (aged 70)"]);
+    expect(lifeRows({ birthday: "1928-07-26", deathday: "1999-03-07", place_of_birth: null }, "2026-10-31")).toEqual([
+      ["Born", "July 26, 1928"],
+      ["Died", "March 7, 1999 (aged 70)"],
+    ]);
   });
 
   it("copes with missing dates", () => {
-    expect(lifeFacts({ birthday: null, deathday: null, place_of_birth: "Rome" }, "2026-10-31")).toEqual(["Born in Rome"]);
-    expect(lifeFacts({ birthday: null, deathday: null, place_of_birth: null }, "2026-10-31")).toEqual([]);
+    expect(lifeRows({ birthday: null, deathday: null, place_of_birth: "Rome" }, "2026-10-31")).toEqual([["From", "Rome"]]);
+    expect(lifeRows({ birthday: null, deathday: null, place_of_birth: null }, "2026-10-31")).toEqual([]);
   });
 });

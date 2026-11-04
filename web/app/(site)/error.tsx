@@ -1,15 +1,20 @@
 "use client";
 
+import { Burst, Slab } from "@/components/Jumpsuit";
+
 export default function ErrorPage({ reset }: { error: Error & { digest?: string }; reset: () => void }) {
   return (
-    <section className="message-page">
-      <h1>Something went wrong</h1>
-      <p className="sub">The catalog didn&apos;t answer. Try again in a moment.</p>
-      <p>
-        <button className="button" onClick={() => reset()}>
+    <section className="hero">
+      <Slab>
+        <h1 className="big m cutT">Something went wrong</h1>
+        <p>The catalog didn&apos;t answer. Try again in a moment.</p>
+        <button className="btn" onClick={() => reset()}>
           Try again
         </button>
-      </p>
+      </Slab>
+      <div className="hero-side">
+        <Burst value="!" />
+      </div>
     </section>
   );
 }

@@ -10,14 +10,24 @@ export function LoginForm({ next, linkError = false }: { next: string; linkError
     <>
       <form action={action} className="auth-form">
         <input type="hidden" name="next" value={next} />
-        <input name="email" type="email" placeholder="Email" required autoComplete="email" />
-        <input name="password" type="password" placeholder="Password" required autoComplete="current-password" />
-        <button className="button" disabled={pending}>
+        <label>
+          Email
+          <input name="email" type="email" required autoComplete="email" />
+        </label>
+        <label>
+          Password
+          <input name="password" type="password" required autoComplete="current-password" />
+        </label>
+        <button className="btn" disabled={pending}>
           {pending ? "Logging in..." : "Log in"}
         </button>
-        {state?.error && <p className="form-error">{state.error}</p>}
+        {state?.error && (
+          <p className="form-error" role="alert">
+            {state.error}
+          </p>
+        )}
         {!state && linkError && (
-          <p className="form-error">
+          <p className="form-error" role="alert">
             That link didn&apos;t work. It may have expired, been used already, or been opened in a different browser
             from the one that asked for it.
           </p>
@@ -36,19 +46,22 @@ export function SignupForm() {
   return (
     <>
       <form action={action} className="auth-form">
-        <input name="email" type="email" placeholder="Email you were invited with" required autoComplete="email" />
-        <input
-          name="password"
-          type="password"
-          placeholder="Password (8+ characters)"
-          required
-          minLength={8}
-          autoComplete="new-password"
-        />
-        <button className="button" disabled={pending}>
+        <label>
+          Email you were invited with
+          <input name="email" type="email" required autoComplete="email" />
+        </label>
+        <label>
+          Password (8+ characters)
+          <input name="password" type="password" required minLength={8} autoComplete="new-password" />
+        </label>
+        <button className="btn" disabled={pending}>
           {pending ? "Creating..." : "Create account"}
         </button>
-        {state?.error && <p className="form-error">{state.error}</p>}
+        {state?.error && (
+          <p className="form-error" role="alert">
+            {state.error}
+          </p>
+        )}
         {state?.message && <p className="form-message">{state.message}</p>}
       </form>
       <p className="form-links">
@@ -65,11 +78,18 @@ export function ResetForm() {
   return (
     <>
       <form action={action} className="auth-form">
-        <input name="email" type="email" placeholder="Email" required autoComplete="email" />
-        <button className="button" disabled={pending}>
+        <label>
+          Email
+          <input name="email" type="email" required autoComplete="email" />
+        </label>
+        <button className="btn" disabled={pending}>
           {pending ? "Sending..." : "Send reset link"}
         </button>
-        {state?.error && <p className="form-error">{state.error}</p>}
+        {state?.error && (
+          <p className="form-error" role="alert">
+            {state.error}
+          </p>
+        )}
         {state?.message && <p className="form-message">{state.message}</p>}
       </form>
       <p className="form-links">
@@ -83,18 +103,18 @@ export function UpdatePasswordForm() {
   const [state, action, pending] = useActionState(updatePassword, null);
   return (
     <form action={action} className="auth-form">
-      <input
-        name="password"
-        type="password"
-        placeholder="New password (8+ characters)"
-        required
-        minLength={8}
-        autoComplete="new-password"
-      />
-      <button className="button" disabled={pending}>
+      <label>
+        New password (8+ characters)
+        <input name="password" type="password" required minLength={8} autoComplete="new-password" />
+      </label>
+      <button className="btn" disabled={pending}>
         {pending ? "Saving..." : "Save password"}
       </button>
-      {state?.error && <p className="form-error">{state.error}</p>}
+      {state?.error && (
+        <p className="form-error" role="alert">
+          {state.error}
+        </p>
+      )}
     </form>
   );
 }

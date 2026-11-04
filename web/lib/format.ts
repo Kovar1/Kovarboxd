@@ -30,24 +30,22 @@ export function ageBetween(birthday: string, until: string): number {
   return uy - by - (um < bm || (um === bm && ud < bd) ? 1 : 0);
 }
 
-/** "Born ... in ... (age N)" and "Died ... (aged N)" lines for a person page. */
-export function lifeFacts(
+/** Born, Died and From rows for a person page, with ages. */
+export function lifeRows(
   p: { birthday: string | null; deathday: string | null; place_of_birth: string | null },
   today: string,
-): string[] {
-  const facts: string[] = [];
-  const where = p.place_of_birth ? ` in ${p.place_of_birth}` : "";
+): [string, string][] {
+  const rows: [string, string][] = [];
   if (p.birthday) {
-    const born = `Born ${formatDate(p.birthday)}${where}`;
-    facts.push(p.deathday ? born : `${born} (age ${ageBetween(p.birthday, today)})`);
-  } else if (p.place_of_birth) {
-    facts.push(`Born${where}`);
+    const born = formatDate(p.birthday) as string;
+    rows.push(["Born", p.deathday ? born : `${born} (age ${ageBetween(p.birthday, today)})`]);
   }
   if (p.deathday) {
-    const age = p.birthday ? ` (aged ${ageBetween(p.birthday, p.deathday)})` : "";
-    facts.push(`Died ${formatDate(p.deathday)}${age}`);
+    const died = formatDate(p.deathday) as string;
+    rows.push(["Died", p.birthday ? `${died} (aged ${ageBetween(p.birthday, p.deathday)})` : died]);
   }
-  return facts;
+  if (p.place_of_birth) rows.push(["From", p.place_of_birth]);
+  return rows;
 }
 
 const LANGUAGES = new Intl.DisplayNames(["en"], { type: "language" });

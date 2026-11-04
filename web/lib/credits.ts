@@ -74,6 +74,17 @@ export function filmography(credits: FilmCredit[]): { acting: FilmographyRow[]; 
   };
 }
 
+/** Consecutive rows by decade of release, keeping their order. No date goes under "TBA". */
+export function groupByDecade(rows: FilmographyRow[]): { decade: string; rows: FilmographyRow[] }[] {
+  const groups = new Map<string, FilmographyRow[]>();
+  for (const row of rows) {
+    const year = row.movie.release_year;
+    const decade = year ? `${Math.floor(year / 10) * 10}s` : "TBA";
+    groups.set(decade, [...(groups.get(decade) ?? []), row]);
+  }
+  return [...groups].map(([decade, group]) => ({ decade, rows: group }));
+}
+
 /** The person's most popular movies, any role. */
 export function knownFor(credits: FilmCredit[], count = 8): MovieSummary[] {
   const movies = new Map<number, MovieSummary>();

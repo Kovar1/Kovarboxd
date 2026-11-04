@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+import { SeenLoader } from "@/components/MyListBits";
 import { Header } from "@/components/SiteChrome";
 
 // Every page in this group needs a login; proxy.ts sends visitors without
@@ -7,6 +9,10 @@ export default function SiteLayout({ children }: Readonly<{ children: React.Reac
     <>
       <Header />
       <main>{children}</main>
+      {/* Personal, so it streams in. Seen stamps appear on the cached pages when it does. */}
+      <Suspense fallback={null}>
+        <SeenLoader />
+      </Suspense>
     </>
   );
 }

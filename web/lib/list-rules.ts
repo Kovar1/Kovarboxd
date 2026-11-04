@@ -17,10 +17,9 @@ export function parseSeenDate(input: unknown): string | null {
   return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === input ? input : null;
 }
 
-/** "You've seen 2 of 4", or null when there's nothing worth saying. */
-export function seenSummary(seen: number, total: number): string | null {
-  if (total === 0 || seen === 0) return null;
-  return seen === total && total > 1 ? `You've seen all ${total}` : `You've seen ${seen} of ${total}`;
+/** "2 of 4" or "All 4", for the You've seen row. */
+export function seenLabel(seen: number, total: number): string {
+  return seen === total && total > 1 ? `All ${total}` : `${seen} of ${total}`;
 }
 
 /** Splits ids into groups small enough for one request's URL. */
