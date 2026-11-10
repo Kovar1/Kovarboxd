@@ -18,14 +18,20 @@ type Props = { params: Promise<{ id: string }> };
 // Pre-build the directors of the most popular movies, so at least one sample
 // exists at build time. Everyone else renders on first visit, then is cached.
 export async function generateStaticParams() {
-  const movies = await getPopularMovies(5);
   const params = new Map<number, string>();
-  for (const m of movies) {
-    const movie = await getMovie(m.tmdb_id);
-    for (const c of movie?.credits ?? []) {
-      if (c.job === "Director") params.set(c.person.tmdb_id, personPath(c.person.tmdb_id, c.person.name));
+  try {
+    const movies = await getPopularMovies(5);
+    for (const m of movies) {
+      const movie = await getMovie(m.tmdb_id);
+      for (const c of movie?.credits ?? []) {
+        if (c.job === "Director") params.set(c.person.tmdb_id, personPath(c.person.tmdb_id, c.person.name));
+      }
     }
+  } catch (error) {
+    // A slow database shouldn't fail the deploy: these pages build on first visit anyway.
+    console.warn("Prebuilding person pages skipped:", error);
   }
+  if (!params.size) params.set(1032, "/person/1032-martin-scorsese");
   return [...params.values()].map((path) => ({ id: path.slice("/person/".length) }));
 }
 
