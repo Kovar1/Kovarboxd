@@ -17,8 +17,14 @@ type Props = { params: Promise<{ id: string }> };
 // Build the most popular movies ahead of time. Every other movie renders on
 // its first visit and is cached after that.
 export async function generateStaticParams() {
-  const movies = await getPopularMovies(20);
-  return movies.map((m) => ({ id: moviePath(m.tmdb_id, m.title).slice("/movie/".length) }));
+  try {
+    const movies = await getPopularMovies(20);
+    return movies.map((m) => ({ id: moviePath(m.tmdb_id, m.title).slice("/movie/".length) }));
+  } catch (error) {
+    // A slow database shouldn't fail the deploy: these pages build on first visit anyway.
+    console.warn("Prebuilding movie pages skipped:", error);
+    return [{ id: "769-goodfellas" }];
+  }
 }
 
 async function load(params: Props["params"]) {

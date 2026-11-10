@@ -1,6 +1,7 @@
 import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 import { detailsAreStale } from "./person-details";
+import { retryOnTimeout } from "./retry";
 import { catalogDb } from "./supabase";
 import { rolesByMovie, type RoleRow } from "./together";
 import type { FilmCredit, MovieDetail, MovieSummary, PersonDetail, PersonSummary, TogetherFilm } from "./types";
@@ -13,11 +14,11 @@ const MOVIE_SUMMARY = "tmdb_id, title, release_year, poster_path, popularity";
 export async function getPopularMovies(limit = 24): Promise<MovieSummary[]> {
   "use cache";
   cacheLife("hours");
-  const { data, error } = await catalogDb()
-    .from("movies")
-    .select(MOVIE_SUMMARY)
-    .order("popularity", { ascending: false })
-    .limit(limit);
+  // This one scans the whole movies table (its index was dropped to stop
+  // nightly bloat), so on a cold database it can pass the 3-second limit.
+  const { data, error } = await retryOnTimeout(() =>
+    catalogDb().from("movies").select(MOVIE_SUMMARY).order("popularity", { ascending: false }).limit(limit),
+  );
   if (error) throw new Error(`popular movies: ${error.message}`);
   return data as MovieSummary[];
 }
