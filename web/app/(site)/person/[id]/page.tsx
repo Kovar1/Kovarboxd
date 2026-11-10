@@ -2,13 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { Suspense } from "react";
+import { CutImage } from "@/components/CutImage";
+import { Filmography } from "@/components/Filmography";
+import { bigSize, BoxLabel, Burst, SectionHead, Slab } from "@/components/Jumpsuit";
 import { MovieGrid } from "@/components/MovieGrid";
-import { PersonSeenCount } from "@/components/MyListBits";
-import { PersonFacts } from "@/components/PersonFacts";
-import { TmdbImage } from "@/components/TmdbImage";
+import { PersonSeenRow } from "@/components/MyListBits";
+import { PersonBio, PersonDetailsProvider, PersonLifeRows } from "@/components/PersonDetails";
 import { getPerson, getPopularMovies, getMovie } from "@/lib/catalog";
-import { filmography, knownFor, type FilmographyRow } from "@/lib/credits";
-import { moviePath, parseIdParam, personPath } from "@/lib/slug";
+import { filmography, knownFor } from "@/lib/credits";
+import { parseIdParam, personPath } from "@/lib/slug";
 import { togetherPath } from "@/lib/together";
 
 type Props = { params: Promise<{ id: string }> };
@@ -40,33 +42,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: person.name, description: person.biography?.slice(0, 200) ?? undefined };
 }
 
-function Filmography({ title, rows, rolePrefix }: { title: string; rows: FilmographyRow[]; rolePrefix?: string }) {
-  if (!rows.length) return null;
-  return (
-    <>
-      <h2>
-        {title} <span className="count">{rows.length}</span>
-      </h2>
-      <ol className="filmography">
-        {rows.map(({ movie, roles }) => (
-          <li key={movie.tmdb_id}>
-            <span className="film-year">{movie.release_year ?? "TBA"}</span>
-            <span className="film-main">
-              <Link href={moviePath(movie.tmdb_id, movie.title)}>{movie.title}</Link>
-              {roles.length > 0 && (
-                <span className="film-role">
-                  {rolePrefix}
-                  {roles.join(", ")}
-                </span>
-              )}
-            </span>
-          </li>
-        ))}
-      </ol>
-    </>
-  );
-}
-
 export default async function PersonPage({ params }: Props) {
   const { raw, person } = await load(params);
   if (!person) notFound();
@@ -74,6 +49,7 @@ export default async function PersonPage({ params }: Props) {
   if (`/person/${raw}` !== canonical) permanentRedirect(canonical);
 
   const { acting, crew } = filmography(person.credits);
+  const movieIds = [...new Set(person.credits.map((c) => c.movie.tmdb_id))];
   // Acting first for actors, crew first for directors, writers and the rest.
   const crewFirst = person.known_for_department && person.known_for_department !== "Acting";
   const sections = [
@@ -82,44 +58,62 @@ export default async function PersonPage({ params }: Props) {
   ];
 
   return (
-    <article className="person">
-      <div className="title-block">
-        <TmdbImage path={person.profile_path} alt={person.name} width={300} aspect="profile" priority className="title-poster" />
-        <div className="title-text">
-          <h1>{person.name}</h1>
-          {person.known_for_department && <p className="facts">Known for {person.known_for_department}</p>}
-          <Suspense fallback={null}>
-            <PersonSeenCount movieIds={[...new Set(person.credits.map((c) => c.movie.tmdb_id))]} />
-          </Suspense>
-          <PersonFacts
-            id={person.tmdb_id}
-            initial={{
-              biography: person.biography,
-              birthday: person.birthday,
-              deathday: person.deathday,
-              place_of_birth: person.place_of_birth,
-            }}
-            stale={person.details_stale}
-            asOf={person.as_of}
-          />
-          <p className="ext-links">
-            <Link href={togetherPath([person.tmdb_id])} className="button-link">
-              Find films with someone else
-            </Link>
-            <a href={`https://www.themoviedb.org/person/${person.tmdb_id}`} target="_blank" rel="noreferrer">
-              TMDB
-            </a>
-          </p>
+    <PersonDetailsProvider
+      id={person.tmdb_id}
+      initial={{
+        biography: person.biography,
+        birthday: person.birthday,
+        deathday: person.deathday,
+        place_of_birth: person.place_of_birth,
+      }}
+      stale={person.details_stale}
+    >
+      <article>
+        <div className="pg">
+          <div>
+            <Slab>
+              <h1 className={bigSize(person.name)}>{person.name}</h1>
+              {person.known_for_department && <p className="meta">Known for {person.known_for_department}</p>}
+            </Slab>
+            <div className="mg two">
+              <div className="pcol">
+                <CutImage id={person.tmdb_id} path={person.profile_path} alt={person.name} width={342} aspect="profile" priority />
+                <div className="acts">
+                  <Link href={togetherPath([person.tmdb_id])} className="btn">
+                    Find films with someone else
+                  </Link>
+                </div>
+                <p className="ext">
+                  <a href={`https://www.themoviedb.org/person/${person.tmdb_id}`} target="_blank" rel="noreferrer">
+                    TMDB
+                  </a>
+                </p>
+              </div>
+              <div>
+                <PersonBio />
+              </div>
+            </div>
+          </div>
+          <div>
+            <Burst value={movieIds.length} />
+            <BoxLabel rows={[["Films in the catalog", movieIds.length]]}>
+              {/* Personal, so it streams in. The rest of this page stays cached. */}
+              <Suspense fallback={null}>
+                <PersonSeenRow movieIds={movieIds} />
+              </Suspense>
+              <PersonLifeRows asOf={person.as_of} />
+            </BoxLabel>
+          </div>
         </div>
-      </div>
 
-      {person.credits.length > 0 && (
-        <>
-          <h2>Known for</h2>
-          <MovieGrid movies={knownFor(person.credits)} />
-        </>
-      )}
-      {crewFirst ? sections.reverse() : sections}
-    </article>
+        {person.credits.length > 0 && (
+          <>
+            <SectionHead title="Known for" />
+            <MovieGrid movies={knownFor(person.credits)} />
+          </>
+        )}
+        {crewFirst ? sections.reverse() : sections}
+      </article>
+    </PersonDetailsProvider>
   );
 }

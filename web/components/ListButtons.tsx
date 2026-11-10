@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { setSeen, setSeenDate, setWatchlist, type ListResult } from "@/lib/list-actions";
 import type { MovieStatus } from "@/lib/list-rules";
+import { markSeen } from "./SeenStore";
 
 /** Seen and Watchlist buttons, plus an optional date, for a movie page. */
 export function ListButtons({ movieId, initial }: { movieId: number; initial: MovieStatus }) {
@@ -14,11 +15,13 @@ export function ListButtons({ movieId, initial }: { movieId: number; initial: Mo
   const apply = (next: MovieStatus, save: () => Promise<ListResult>) => {
     const previous = status;
     setStatus(next);
+    if (next.seen !== previous.seen) markSeen(movieId, next.seen);
     setError(null);
     startTransition(async () => {
       const result = await save();
       if (result.error) {
         setStatus(previous);
+        if (next.seen !== previous.seen) markSeen(movieId, previous.seen);
         setError(result.error);
       }
     });
@@ -28,7 +31,7 @@ export function ListButtons({ movieId, initial }: { movieId: number; initial: Mo
     <div className="list-buttons">
       <button
         type="button"
-        className={status.seen ? "list-button on" : "list-button"}
+        className={status.seen ? "btn seen" : "btn"}
         aria-pressed={status.seen}
         disabled={pending}
         onClick={() =>
@@ -43,17 +46,8 @@ export function ListButtons({ movieId, initial }: { movieId: number; initial: Mo
       >
         {status.seen ? "✓ Seen" : "Mark seen"}
       </button>
-      <button
-        type="button"
-        className={status.watchlist ? "list-button on" : "list-button"}
-        aria-pressed={status.watchlist}
-        disabled={pending}
-        onClick={() => apply({ ...status, watchlist: !status.watchlist }, () => setWatchlist(movieId, !status.watchlist))}
-      >
-        {status.watchlist ? "✓ On watchlist" : "+ Watchlist"}
-      </button>
       {status.seen && (
-        <label className="seen-date">
+        <label className="fld">
           <span>Seen on</span>
           {/* Saves when you leave the field, so half-typed years never get stored. */}
           <input
@@ -69,38 +63,59 @@ export function ListButtons({ movieId, initial }: { movieId: number; initial: Mo
           />
         </label>
       )}
-      {error && <p className="form-error">{error}</p>}
+      <button
+        type="button"
+        className={status.watchlist ? "btn line on" : "btn line"}
+        aria-pressed={status.watchlist}
+        disabled={pending}
+        onClick={() => apply({ ...status, watchlist: !status.watchlist }, () => setWatchlist(movieId, !status.watchlist))}
+      >
+        {status.watchlist ? "✓ On watchlist" : "+ Watchlist"}
+      </button>
+      {error && (
+        <p className="form-error" role="alert">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
 
-/** A small Seen toggle for rows in a list of films. */
+/** A small Seen toggle for cards in a list of films. */
 export function SeenToggle({ movieId, initial }: { movieId: number; initial: boolean }) {
   const [seen, setSeenState] = useState(initial);
   const [failed, setFailed] = useState(false);
   const [pending, startTransition] = useTransition();
 
   return (
-    <button
-      type="button"
-      className={seen ? "seen-toggle on" : "seen-toggle"}
-      aria-pressed={seen}
-      disabled={pending}
-      title={failed ? "That didn't save. Try again." : undefined}
-      onClick={() => {
-        const next = !seen;
-        setSeenState(next);
-        setFailed(false);
-        startTransition(async () => {
-          const result = await setSeen(movieId, next);
-          if (result.error) {
-            setSeenState(!next);
-            setFailed(true);
-          }
-        });
-      }}
-    >
-      {seen ? "✓ Seen" : "Mark seen"}
-    </button>
+    <>
+      <button
+        type="button"
+        className={seen ? "mk on" : "mk"}
+        aria-pressed={seen}
+        disabled={pending}
+        onClick={() => {
+          const next = !seen;
+          setSeenState(next);
+          markSeen(movieId, next);
+          setFailed(false);
+          startTransition(async () => {
+            const result = await setSeen(movieId, next);
+            if (result.error) {
+              setSeenState(!next);
+              markSeen(movieId, !next);
+              setFailed(true);
+            }
+          });
+        }}
+      >
+        {seen ? "✓ Seen" : "Mark seen"}
+      </button>
+      {failed && (
+        <span className="mk-err" role="alert">
+          That didn&apos;t save. Try again.
+        </span>
+      )}
+    </>
   );
 }

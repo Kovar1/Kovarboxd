@@ -128,6 +128,9 @@ watchlist. Marking a movie seen also takes it off the watchlist.
   read the session, so they sit inside `<Suspense>` and stream in. Changes go
   through server actions in `lib/list-actions.ts`, which check the login
   themselves and call `refresh()` so counts update without a reload.
+- **Seen stamps:** the `(site)` layout streams in the person's seen ids once per
+  page, and `components/SeenStore.tsx` hands them to every stamp, so cached
+  poster grids and filmographies can still show what you've seen.
 - A movie on someone's list can't be deleted, which protects lists from any
   future catalog cleanup.
 
@@ -137,9 +140,30 @@ watchlist. Marking a movie seen also takes it off the watchlist.
 that returns all the numbers. It runs with the caller's permissions, so the seen
 table's RLS limits it to their rows. "People you've seen together most" uses each
 film's top 10 billed cast and directors, and links to films together. Charts are
-plain HTML bars with the value at the tip, with no chart library. The bar color
-`--chart-bar` is the accent darkened until it passes the chart palette check
-against the dark background.
+plain HTML bars with the value beside them, with no chart library. The longest
+bar in each chart is red.
+
+## Design
+
+The look is called Jumpsuit. One yellow sheet sits between two film-edge stripes,
+black paper slabs carry each page's subject, and ruled box labels carry the facts.
+The pieces live in `components/Jumpsuit.tsx` and the colors in `app/globals.css`.
+
+- **Color:** yellow `#fab617` and red `#e30613`, sampled from the Kodak logo, and
+  black `#0f0d0b`. Black on red is 4.0:1, so red only carries text at 19px bold or
+  larger.
+- **Type:** Archivo throughout, through `next/font`. Its width axis gives the
+  condensed labels.
+- **One star per page:** the red star holds that page's key number.
+- **Posters:** black on yellow in lists, using grayscale and multiply, and real
+  color on hover and on the movie page, since phones have no hover.
+- **Rough edges, and what they cost:** a live SVG filter only runs on the few large
+  slabs, stars and big words. Posters and bars get a fixed crooked outline from
+  `lib/cut.ts`, based on the film's id, and the side stripes are a pre-drawn tile,
+  because a live filter across a long page is slow on phones.
+- **The header:** the giant wordmark and the underlined nav link come from CSS
+  `:has()` looking at the page's own class, so the header stays a cached server
+  component.
 
 ## Person details on demand
 

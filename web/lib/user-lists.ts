@@ -45,6 +45,26 @@ export async function getSeenAmong(movieIds: number[]): Promise<Set<number>> {
   return seen;
 }
 
+/** Every film the person has seen, for the Seen stamps. Empty when logged out. */
+export async function getSeenIds(): Promise<number[]> {
+  const me = await currentUser();
+  if (!me) return [];
+  const ids: number[] = [];
+  // The Data API returns at most 1,000 rows per request.
+  const pageSize = 1000;
+  for (let from = 0; ; from += pageSize) {
+    const { data, error } = await me.db
+      .from("seen")
+      .select("movie_id")
+      .order("movie_id")
+      .range(from, from + pageSize - 1);
+    if (error) throw new Error(`seen ids: ${error.message}`);
+    const rows = data as { movie_id: number }[];
+    ids.push(...rows.map((r) => r.movie_id));
+    if (rows.length < pageSize) return ids;
+  }
+}
+
 export type ListedMovie = MovieSummary & { seen_on: string | null };
 
 /** Everything on one of the person's lists, most recently added first. */

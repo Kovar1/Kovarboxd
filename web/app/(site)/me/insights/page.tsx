@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { InsightsView } from "@/components/InsightCharts";
+import { Slab } from "@/components/Jumpsuit";
 import { ListTabs } from "@/components/ListTabs";
 import type { Insights } from "@/lib/insights";
 import { currentUser } from "@/lib/user-lists";
@@ -10,8 +11,10 @@ export const metadata: Metadata = { title: "Insights" };
 
 export default function InsightsPage() {
   return (
-    <section>
-      <h1>My lists</h1>
+    <section className="p-insights page-slab">
+      <Slab>
+        <h1 className="big cutT">Your numbers</h1>
+      </Slab>
       <Suspense fallback={<p className="empty">Loading...</p>}>
         <MyInsights />
       </Suspense>

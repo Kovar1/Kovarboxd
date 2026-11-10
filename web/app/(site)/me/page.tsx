@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { Slab } from "@/components/Jumpsuit";
 import { ListTabs } from "@/components/ListTabs";
 import { MovieGrid } from "@/components/MovieGrid";
 import { getMyList } from "@/lib/user-lists";
@@ -10,8 +11,10 @@ type Props = { searchParams: Promise<{ list?: string }> };
 
 export default function MyListsPage({ searchParams }: Props) {
   return (
-    <section>
-      <h1>My lists</h1>
+    <section className="p-lists page-slab">
+      <Slab>
+        <h1 className="big cutT">My lists</h1>
+      </Slab>
       <Suspense fallback={<p className="empty">Loading...</p>}>
         <MyLists searchParams={searchParams} />
       </Suspense>

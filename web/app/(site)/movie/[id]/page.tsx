@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, type ReactNode } from "react";
+import { CutImage } from "@/components/CutImage";
+import { bigSize, BoxLabel, Burst, SectionHead, Slab } from "@/components/Jumpsuit";
 import { MovieListControls } from "@/components/MyListBits";
 import { TmdbImage } from "@/components/TmdbImage";
 import { getMovie, getPopularMovies } from "@/lib/catalog";
 import { castOf, crewByJob } from "@/lib/credits";
+import { cutOutline } from "@/lib/cut";
 import { formatDate, formatMoney, formatRuntime, languageName } from "@/lib/format";
 import { moviePath, parseIdParam, personPath } from "@/lib/slug";
 
@@ -42,46 +45,63 @@ export default async function MoviePage({ params }: Props) {
 
   const cast = castOf(movie.credits);
   const crew = crewByJob(movie.credits);
-  const facts = [
-    formatDate(movie.release_date),
-    formatRuntime(movie.runtime),
-    movie.genres.map((g) => g.name).join(", ") || null,
-  ].filter(Boolean);
-  const details: [string, string | null][] = [
-    ["TMDB rating", movie.vote_count ? `${movie.vote_average?.toFixed(1)} / 10 from ${movie.vote_count.toLocaleString("en-US")} votes` : null],
+  const genres = movie.genres.map((g) => g.name).join(", ") || null;
+  const runtime = formatRuntime(movie.runtime);
+  const meta = [movie.release_year, runtime, genres].filter(Boolean);
+  const facts: [string, ReactNode][] = [
+    ["Released", formatDate(movie.release_date)],
+    ["Runtime", runtime],
+    ["Genres", genres],
+    ["TMDB votes", movie.vote_count ? movie.vote_count.toLocaleString("en-US") : null],
     ["Status", movie.status && movie.status !== "Released" ? movie.status : null],
-    ["Original language", languageName(movie.original_language)],
+    ["Language", languageName(movie.original_language)],
     ["Budget", formatMoney(movie.budget)],
     ["Revenue", formatMoney(movie.revenue)],
   ];
 
   return (
-    <article className="movie">
-      {movie.backdrop_path && (
-        <div className="backdrop" aria-hidden>
+    <article>
+      {movie.backdrop_path ? (
+        <div className="bd" style={{ clipPath: cutOutline(movie.tmdb_id + 7, 1.1) }} aria-hidden>
           <TmdbImage path={movie.backdrop_path} alt="" width={1280} aspect="backdrop" priority />
         </div>
+      ) : (
+        <div className="no-bd" />
       )}
-      <div className="title-block">
-        <TmdbImage path={movie.poster_path} alt={movie.title} width={300} aspect="poster" priority className="title-poster" />
-        <div className="title-text">
-          <h1>
-            {movie.title} {movie.release_year && <span className="year">{movie.release_year}</span>}
-          </h1>
-          {movie.original_title && movie.original_title !== movie.title && (
-            <p className="sub">Original title: {movie.original_title}</p>
-          )}
-          {facts.length > 0 && <p className="facts">{facts.join("  |  ")}</p>}
+      <div className="ovl">
+        <Slab>
+          <h1 className={bigSize(movie.title)}>{movie.title}</h1>
+          {meta.length > 0 && <p className="meta">{meta.join(" / ")}</p>}
+          {movie.original_title && movie.original_title !== movie.title && <p>Original title: {movie.original_title}</p>}
+        </Slab>
+      </div>
+
+      <div className="mg">
+        <div className="pcol">
+          <CutImage id={movie.tmdb_id} path={movie.poster_path} alt={movie.title} width={342} priority full />
           {/* Personal, so it streams in. The rest of this page stays cached. */}
           <Suspense fallback={<div className="list-buttons" />}>
             <MovieListControls movieId={movie.tmdb_id} />
           </Suspense>
-          {movie.tagline && <p className="tagline">{movie.tagline}</p>}
-          {movie.overview && <p className="overview">{movie.overview}</p>}
+          <p className="ext">
+            {movie.imdb_id && (
+              <a href={`https://www.imdb.com/title/${movie.imdb_id}/`} target="_blank" rel="noreferrer">
+                IMDb
+              </a>
+            )}
+            <a href={`https://www.themoviedb.org/movie/${movie.tmdb_id}`} target="_blank" rel="noreferrer">
+              TMDB
+            </a>
+          </p>
+        </div>
+
+        <div>
+          {movie.tagline && <p className="tag">{movie.tagline}</p>}
+          {movie.overview && <p className="body">{movie.overview}</p>}
           {crew.length > 0 && (
-            <dl className="key-crew">
+            <dl className="crew">
               {crew.map(({ job, people }) => (
-                <div key={job}>
+                <div key={job} style={{ display: "contents" }}>
                   <dt>{job}</dt>
                   <dd>
                     {people.map((p, i) => (
@@ -95,49 +115,28 @@ export default async function MoviePage({ params }: Props) {
               ))}
             </dl>
           )}
-          <p className="ext-links">
-            {movie.imdb_id && (
-              <a href={`https://www.imdb.com/title/${movie.imdb_id}/`} target="_blank" rel="noreferrer">
-                IMDb
-              </a>
-            )}
-            <a href={`https://www.themoviedb.org/movie/${movie.tmdb_id}`} target="_blank" rel="noreferrer">
-              TMDB
-            </a>
-          </p>
+        </div>
+
+        <div className="side">
+          {movie.vote_count ? <Burst value={movie.vote_average?.toFixed(1) ?? ""} /> : null}
+          <BoxLabel rows={facts} />
         </div>
       </div>
 
       {cast.length > 0 && (
         <>
-          <h2>Cast</h2>
-          <ul className="cast-grid">
+          <SectionHead title="Cast" />
+          <ul className="cast">
             {cast.map((c) => (
               <li key={c.credit_id}>
-                <Link href={personPath(c.person.tmdb_id, c.person.name)} className="cast-card">
-                  <TmdbImage path={c.person.profile_path} alt={c.person.name} width={154} aspect="profile" />
-                  <span className="cast-name">{c.person.name}</span>
-                  {c.character && <span className="cast-character">{c.character}</span>}
+                <Link href={personPath(c.person.tmdb_id, c.person.name)} className="pc">
+                  <CutImage id={c.person.tmdb_id} path={c.person.profile_path} alt={c.person.name} width={154} aspect="profile" />
+                  <b>{c.person.name}</b>
+                  {c.character && <span className="ch">{c.character}</span>}
                 </Link>
               </li>
             ))}
           </ul>
-        </>
-      )}
-
-      {details.some(([, v]) => v) && (
-        <>
-          <h2>Details</h2>
-          <dl className="details">
-            {details
-              .filter(([, v]) => v)
-              .map(([label, value]) => (
-                <div key={label}>
-                  <dt>{label}</dt>
-                  <dd>{value}</dd>
-                </div>
-              ))}
-          </dl>
         </>
       )}
     </article>

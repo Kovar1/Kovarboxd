@@ -71,63 +71,64 @@ export function PeoplePicker({
 
   return (
     <div className={`picker${pending ? " pending" : ""}`} ref={boxRef}>
-      <ul className="picker-chips">
-        {selected.map((p) => (
-          <li key={p.tmdb_id} className="chip">
-            <TmdbImage path={p.profile_path} alt={p.name} width={28} aspect="profile" />
-            <span>{p.name}</span>
-            <button type="button" aria-label={`Remove ${p.name}`} onClick={() => go(ids.filter((id) => id !== p.tmdb_id))}>
-              &times;
-            </button>
-          </li>
-        ))}
-        {!full && (
-          <li className="picker-input">
-            <input
-              type="text"
-              value={query}
-              placeholder={selected.length ? "Add another person" : "Type a name, like Scorsese"}
-              autoComplete="off"
-              autoFocus={autoFocus}
-              aria-label="Add a person"
-              role="combobox"
-              aria-expanded={showList}
-              aria-controls={listId}
-              aria-activedescendant={active >= 0 ? `${listId}-${active}` : undefined}
-              onChange={(e) => {
-                setQuery(e.target.value);
-                setOpen(true);
-                setActive(-1);
-              }}
-              onFocus={() => setOpen(true)}
-              onKeyDown={onKeyDown}
-            />
-            {showList && (
-              <ul id={listId} className="suggestions" role="listbox">
-                {suggestions.map((s, i) => (
-                  <li
-                    key={s.id}
-                    id={`${listId}-${i}`}
-                    role="option"
-                    aria-selected={i === active}
-                    className={i === active ? "active" : ""}
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      go([...ids, s.id]);
-                    }}
-                    onMouseEnter={() => setActive(i)}
-                  >
-                    <TmdbImage path={s.image} alt={s.label} width={28} aspect="profile" className="suggestion-img" />
-                    <span className="suggestion-label">{s.label}</span>
-                    {s.detail && <span className="suggestion-detail">{s.detail}</span>}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </li>
-        )}
-      </ul>
-      {full && <p className="sub">That&apos;s the most people one search can take ({MAX_PEOPLE}).</p>}
+      {selected.length > 0 && (
+        <ul className="picker-names">
+          {selected.map((p) => (
+            <li key={p.tmdb_id} className="nm">
+              <span className={`big ${selected.length > 3 ? "s" : "m"} cutT`}>{p.name}</span>
+              <button type="button" aria-label={`Remove ${p.name}`} onClick={() => go(ids.filter((id) => id !== p.tmdb_id))}>
+                &times;
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {!full && (
+        <div className="picker-input">
+          <input
+            type="text"
+            value={query}
+            placeholder={selected.length ? "+ Add someone" : "Type a name, like Scorsese"}
+            autoComplete="off"
+            autoFocus={autoFocus}
+            aria-label="Add a person"
+            role="combobox"
+            aria-expanded={showList}
+            aria-controls={listId}
+            aria-activedescendant={active >= 0 ? `${listId}-${active}` : undefined}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setOpen(true);
+              setActive(-1);
+            }}
+            onFocus={() => setOpen(true)}
+            onKeyDown={onKeyDown}
+          />
+          {showList && (
+            <ul id={listId} className="suggestions" role="listbox">
+              {suggestions.map((s, i) => (
+                <li
+                  key={s.id}
+                  id={`${listId}-${i}`}
+                  role="option"
+                  aria-selected={i === active}
+                  className={i === active ? "active" : ""}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    go([...ids, s.id]);
+                  }}
+                  onMouseEnter={() => setActive(i)}
+                >
+                  <TmdbImage path={s.image} alt={s.label} width={28} aspect="profile" className="suggestion-img" />
+                  <span className="suggestion-label">{s.label}</span>
+                  {s.detail && <span className="suggestion-detail">{s.detail}</span>}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+      {full && <p>That&apos;s the most people one search can take ({MAX_PEOPLE}).</p>}
     </div>
   );
 }

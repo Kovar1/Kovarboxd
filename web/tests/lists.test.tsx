@@ -1,6 +1,6 @@
 import { renderToString } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { chunks, isValidMovieId, parseSeenDate, seenSummary } from "@/lib/list-rules";
+import { chunks, isValidMovieId, parseSeenDate, seenLabel } from "@/lib/list-rules";
 import { togetherPath } from "@/lib/together";
 
 // A stand-in for the logged-in Supabase client. It records every write, so the
@@ -145,10 +145,10 @@ describe("list rules", () => {
   });
 
   it("summarizes what you've seen", () => {
-    expect(seenSummary(2, 4)).toBe("You've seen 2 of 4");
-    expect(seenSummary(4, 4)).toBe("You've seen all 4");
-    expect(seenSummary(1, 1)).toBe("You've seen 1 of 1");
-    expect(seenSummary(0, 4)).toBeNull();
+    expect(seenLabel(2, 4)).toBe("2 of 4");
+    expect(seenLabel(4, 4)).toBe("All 4");
+    expect(seenLabel(1, 1)).toBe("1 of 1");
+    expect(seenLabel(0, 4)).toBe("0 of 4");
   });
 
   it("splits long id lists", () => {

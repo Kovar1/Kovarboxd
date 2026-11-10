@@ -1,11 +1,13 @@
 import Link from "next/link";
+import { cutOutline } from "@/lib/cut";
 import { barPercent, hoursWatched, type Bar, type Insights } from "@/lib/insights";
 import { personPath } from "@/lib/slug";
 import { togetherPath } from "@/lib/together";
 
 /**
- * A horizontal bar chart in plain HTML: one series, one color, the value at the
- * tip of each bar. Each row is text, so it reads the same without the bars.
+ * A horizontal bar chart in plain HTML: black paper bars with the value beside
+ * them, and the longest in red. Each row is text, so it reads the same without
+ * the bars.
  */
 export function BarChart({ title, bars, unit = "film" }: { title: string; bars: Bar[]; unit?: string }) {
   if (!bars.length) return null;
@@ -20,9 +22,15 @@ export function BarChart({ title, bars, unit = "film" }: { title: string; bars: 
             <li key={bar.label} title={`${bar.label}: ${bar.count} ${unit}${bar.count === 1 ? "" : "s"}`}>
               <span className="bar-label">{label}</span>
               <span className="bar-track">
-                <span className="bar" style={{ width: `${barPercent(bar.count, max)}%` }} />
-                <span className="bar-value">{bar.count}</span>
+                <span
+                  className={bar.count === max ? "fill top" : "fill"}
+                  style={{
+                    width: `${barPercent(bar.count, max)}%`,
+                    clipPath: cutOutline(bar.count * 31 + bar.label.length, 1.4),
+                  }}
+                />
               </span>
+              <span className="bar-value">{bar.count}</span>
             </li>
           );
         })}
@@ -34,7 +42,7 @@ export function BarChart({ title, bars, unit = "film" }: { title: string; bars: 
 export function InsightsView({ data }: { data: Insights }) {
   return (
     <>
-      <dl className="stat-row">
+      <dl className="nums">
         <div>
           <dd>{data.total.toLocaleString("en-US")}</dd>
           <dt>films seen</dt>
